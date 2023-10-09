@@ -1,0 +1,26 @@
+# Use a smaller Alpine-based image for production
+FROM alpine:3.18 as production
+
+WORKDIR /app
+
+# Copy go.mod and go.sum for dependency downloading
+COPY go.mod .
+COPY go.sum .
+
+# Download dependencies
+RUN go mod download
+
+# Copy the entire project into the container
+COPY . .
+
+# Set GIN_MODE environment variable to "release"
+ENV GIN_MODE=release
+
+# Build the application for production
+RUN go build -o main ./cmd/app
+
+# Expose the application's port
+EXPOSE 8080
+
+# Start the application in production mode
+CMD ["./main"]

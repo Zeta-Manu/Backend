@@ -58,7 +58,10 @@ func postVideo(c *gin.Context) {
 	// Simulate sending the video to the ML model and include the mock ML response
 	mlResponse, err := forwardVideoToML(videoFilePath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send the video to the ML model"})
+		c.JSON(
+			http.StatusInternalServerError,
+			gin.H{"error": "Failed to send the video to the ML model"},
+		)
 		return
 	}
 
