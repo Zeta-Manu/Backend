@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"TestBackend/internal/api/controllers"
+	"github.com/Zeta-Manu/Backend/internal/api/controllers"
 
 	"github.com/gin-gonic/gin"
 )

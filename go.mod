@@ -1,4 +1,4 @@
-module TestBackend
+module github.com/Zeta-Manu/Backend
 
 go 1.21.0
 

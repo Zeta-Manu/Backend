@@ -1,7 +1,7 @@
 package main
 
 import (
-	"TestBackend/internal/api/routes"
+	"github.com/Zeta-Manu/Backend/internal/api/routes"
 
 	"github.com/gin-gonic/gin"
 )
