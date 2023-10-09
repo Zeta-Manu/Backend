@@ -7,11 +7,11 @@ DOCKER_CONTAINER_NAME = zeta-api-container
 
 # Build Development Docker image
 docker-build-dev:
-	docker build -t $(DOCKER_IMAGE_NAME):devlopment -f deployment/Dockerfile.dev .
+	docker build -t $(DOCKER_IMAGE_NAME):development -f deployment/Dockerfile.dev .
 
 # Run Development Docker container
 docker-run-dev:
-	docker run -p $(PORT):$(PORT) --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME):devlopment
+	docker run -p $(PORT):$(PORT) --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME):development
 
 # Build and Run Development
 dev: docker-build-dev docker-run-dev
