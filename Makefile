@@ -14,7 +14,8 @@ docker-run-dev:
 	docker run -p $(PORT):$(PORT) --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME):development
 
 # Build and Run Development
-dev: docker-build-dev docker-run-dev
+dev: 
+	docker-compose up
 
 # Build Docker image
 docker-build-prod:

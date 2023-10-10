@@ -1,6 +1,12 @@
 # Use a development-specific base image with Go and Air
 FROM golang:1.21-alpine as development
 
+ARG DB_HOST
+ARG DB_PORT
+ARG DB_USER
+ARG DB_PASSWORD
+ARG DB_NAME
+
 WORKDIR /app
 
 # Install air for development

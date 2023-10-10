@@ -13,6 +13,13 @@ RUN go mod download
 # Copy the entire project into the container
 COPY . .
 
+# Declare environment variables as placeholders with empty values
+ENV DB_HOST=
+ENV DB_PORT=
+ENV DB_USER=
+ENV DB_PASSWORD=
+ENV DB_NAME=
+
 # Set GIN_MODE environment variable to "release"
 ENV GIN_MODE=release
 
