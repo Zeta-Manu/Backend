@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/Zeta-Manu/Backend/internal/config"
 )
 
 type Database struct {
@@ -24,6 +26,19 @@ func NewDatabase(dataSourceName string) (*Database, error) {
 	}
 
 	return &Database{Conn: db}, nil
+}
+
+// InitializeDatabase initializes and returns a new database connection.
+func InitializeDatabase(dbConfig config.DatabaseConfig) (*Database, error) {
+	dbDataSourceName := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s",
+		dbConfig.User,
+		dbConfig.Password,
+		dbConfig.Host,
+		dbConfig.Port,
+		dbConfig.Name,
+	)
+	return NewDatabase(dbDataSourceName)
 }
 
 // Close closes the database connection.

@@ -8,24 +8,31 @@ services:
       args:
         DB_HOST: ${DB_HOST}
         DB_PORT: ${DB_PORT}
-        DB_HOST: ${DB_USER}
+        DB_USER: ${DB_USER}
         DB_PASSWORD: ${DB_PASSWORD}
         DB_NAME: ${DB_NAME}
+    env_file:
+      - .env
     container_name: zeta-api-container
     working_dir: /app
     ports:
      - "8080:8080"
     depends_on:
-     - db
+      db:
+        condition: service_healthy
 
   db:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATBASE: manu
+      MYSQL_DATABASE: manu
     ports:
      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://mysql:3306"]
+      timeout: 20s
+      retries: 10
 
 networks:
   default:

@@ -1,21 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
-	"github.com/Zeta-Manu/Backend/internal/database"
 )
 
 func main() {
 	// Initialize the application configuration
 	appConfig := config.NewAppConfig()
 
-	dbDataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",appConfig.Database.User, appConfig.Database.Password, appConfig.Database.Host, appConfig.Database.Port, appConfig.Database.Name)
-	db, err := database.NewDatabase(dbDataSourceName)
+	db, err := database.InitializeDatabase(appConfig.Database)
 	if err != nil {
 		log.Fatalf("Failed to connect to the database: %v", err)
 	}
@@ -25,9 +24,9 @@ func main() {
 	r := gin.Default()
 
 	// Initialize routes
-	routes.InitRoutes(r)
+	routes.InitRoutes(r, db)
 
-	r.Run(); err != nil {
+	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

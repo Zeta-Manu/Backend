@@ -14,8 +14,12 @@ docker-run-dev:
 	docker run -p $(PORT):$(PORT) --name $(DOCKER_CONTAINER_NAME) $(DOCKER_IMAGE_NAME):development
 
 # Build and Run Development
-dev: 
+dev:
+	docker-compose build
 	docker-compose up
+
+dev-stop:
+	docker-compose down
 
 # Build Docker image
 docker-build-prod:
@@ -29,3 +33,10 @@ docker-run-prod:
 docker-stop:
 	docker stop $(DOCKER_CONTAINER_NAME)
 	docker rm $(DOCKER_CONTAINER_NAME)
+
+tidy:
+	go mod tidy
+	go get -u github.com/swaggo/swag/cmd/swag@latest
+
+swag:
+	swag init -g cmd/app/main.go

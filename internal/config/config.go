@@ -5,11 +5,11 @@ import (
 )
 
 type DatabaseConfig struct {
-	Host string
-	Port string
-	User string
+	Host     string
+	Port     string
+	User     string
 	Password string
-	Name string
+	Name     string
 }
 
 // The application configuration
@@ -20,11 +20,11 @@ type AppConfig struct {
 // initializes and returns the application configuration
 func NewAppConfig() *AppConfig {
 	dbConfig := DatabaseConfig{
-		Host: os.Getenv("DB_HOST"),
-		Port: os.Getenv("DB_PORT"),
-		User: os.Getenv("DB_USER"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		User:     os.Getenv("DB_USER"),
 		Password: os.Getenv("DB_PASSWORD"),
-		Name: os.Getenv("DB_NAME"),
+		Name:     os.Getenv("DB_NAME"),
 	}
 
 	return &AppConfig{

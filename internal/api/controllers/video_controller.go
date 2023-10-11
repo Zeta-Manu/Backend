@@ -9,14 +9,24 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 )
 
-type VideoController struct{}
-
-func NewVideoController() *VideoController {
-	return &VideoController{}
+type VideoController struct {
+	db database.DBAdapter
 }
 
+func NewVideoController(db database.DBAdapter) *VideoController {
+	return &VideoController{
+		db: db,
+	}
+}
+
+//	@Summary	Upload a video
+//	@Produce	json
+//	@Param		video	formData	file	true	"Vidoe File"
+//	@Router		/video [post]
 func (vc *VideoController) PostVideo(c *gin.Context) {
 	// Get the uploaded video file from the request
 	file, header, err := c.Request.FormFile("video")
