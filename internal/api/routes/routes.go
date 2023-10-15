@@ -7,11 +7,12 @@ import (
 
 	docs "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
+	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
 )
 
-func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter) {
-	videoController := controllers.NewVideoController(dbAdapter)
+func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter) {
+	videoController := controllers.NewVideoController(dbAdapter, s3Adapter)
 
 	docs.SwaggerInfo.BasePath = "/api"
 	api := router.Group("/api")
