@@ -1,6 +1,9 @@
 # Use a development-specific base image with Go and Air
 FROM golang:1.21-alpine as development
 
+# Set environment variables for AWS SDK
+ENV AWS_SDK_LOAD_CONFIG=true
+
 ARG DB_HOST
 ARG DB_PORT
 ARG DB_USER
@@ -15,6 +18,9 @@ RUN go install github.com/cosmtrek/air@latest
 # Copy go.mod and go.sum for dependency downloading
 COPY go.mod .
 COPY go.sum .
+
+# Copy the AWS credentials file from the host to the container
+COPY ~/.aws/credentials /root/.aws/credentials
 
 # Download dependencies
 RUN go mod download
