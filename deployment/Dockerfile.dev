@@ -9,6 +9,10 @@ ARG DB_PORT
 ARG DB_USER
 ARG DB_PASSWORD
 ARG DB_NAME
+ARG S3_BUCKET
+ARG REGION
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
 
 WORKDIR /app
 
@@ -18,9 +22,6 @@ RUN go install github.com/cosmtrek/air@latest
 # Copy go.mod and go.sum for dependency downloading
 COPY go.mod .
 COPY go.sum .
-
-# Copy the AWS credentials file from the host to the container
-COPY ~/.aws/credentials /root/.aws/credentials
 
 # Download dependencies
 RUN go mod download

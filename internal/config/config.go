@@ -12,6 +12,11 @@ type DatabaseConfig struct {
 	Name     string
 }
 
+type IAMConfig struct {
+	Key string
+	Secret string
+}
+
 type S3Config struct {
 	BucketName string
 	Region     string
@@ -26,6 +31,7 @@ type CognitoConfig struct {
 // The application configuration
 type AppConfig struct {
 	Database DatabaseConfig
+	IAM      IAMConfig
 	S3       S3Config
 }
 
@@ -39,6 +45,11 @@ func NewAppConfig() *AppConfig {
 		Name:     os.Getenv("DB_NAME"),
 	}
 
+	iamConfig := IAMConfig{
+		Key: os.Getenv("AWS_ACCESS_KEY_ID"),
+		Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+	}
+
 	s3Config := S3Config{
 		BucketName: os.Getenv("S3_BUCKET"),
 		Region:     os.Getenv("REGION"),
@@ -46,6 +57,7 @@ func NewAppConfig() *AppConfig {
 
 	return &AppConfig{
 		Database: dbConfig,
+		IAM:      iamConfig,
 		S3:       s3Config,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
@@ -14,6 +15,8 @@ import (
 func main() {
 	// Initialize the application configuration
 	appConfig := config.NewAppConfig()
+
+	creds := credentials.NewStaticCredentials(appConfig.IAM.Key, appConfig.IAM.Secret, "")
 
 	db, err := database.InitializeDatabase(appConfig.Database)
 	if err != nil {

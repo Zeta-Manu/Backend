@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type S3Adapter struct {
@@ -14,9 +15,10 @@ type S3Adapter struct {
 	Bucket  string
 }
 
-func NewS3Adapter(region, bucket string) (*S3Adapter, error) {
+func NewS3Adapter(region, bucket string, creds *credentials.Credentials) (*S3Adapter, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
+		Credentials: creds,
 	})
 	if err != nil {
 		return nil, err
