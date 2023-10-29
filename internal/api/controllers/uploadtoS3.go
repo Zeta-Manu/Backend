@@ -1,4 +1,4 @@
-package uploadtoS3
+package controllers
 
 import (
 	"io/ioutil"

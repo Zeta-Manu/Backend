@@ -9,14 +9,13 @@ import (
 	docs "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
+	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
-	"github.com/Zeta-Manu/Backend/internal/api/translator"
-	"github.com/Zeta-Manu/Backend/internal/api/uploadtoS3"
 )
 
 func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateService *translate.Translate) {
 	videoController := controllers.NewVideoController(dbAdapter, s3Adapter)
-	fileUploader := uploadtoS3.NewFileUploader(s3Adapter)
+	fileUploader := controllers.NewFileUploader(s3Adapter)
 	Trans := translator.NewTranslator(translateService)
 
 	docs.SwaggerInfo.BasePath = "/api"
