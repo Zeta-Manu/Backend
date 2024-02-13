@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/joho/godotenv"
 )
 
@@ -102,11 +104,29 @@ func LoginHandler(c *gin.Context) {
 	// Login user
 	tokens, err := loginUser(cognitoClient, os.Getenv("COGNITO_USER_POOL_ID"), os.Getenv("COGNITO_CLIENT_ID"), userLogin)
 	if err != nil {
+		fmt.Println("Login error:", err)
 		c.JSON(401, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	c.JSON(200, gin.H{"access_token": tokens.AccessToken, "id_token": tokens.IdToken, "refresh_token": tokens.RefreshToken})
+	// Generate JWT tokens
+	accessToken, err := generateJWTToken(*tokens.AccessToken)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error generating access token"})
+		return
+	}
+	idToken, err := generateJWTToken(*tokens.IdToken)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error generating id token"})
+		return
+	}
+	refreshToken, err := generateJWTToken(*tokens.RefreshToken)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Error generating refresh token"})
+		return
+	}
+
+	c.JSON(200, gin.H{"access_token": accessToken, "id_token": idToken, "refresh_token": refreshToken})
 }
 
 func registerUser(client *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, clientID string, user UserRegistration) error {
@@ -134,6 +154,20 @@ func registerUser(client *cognitoidentityprovider.CognitoIdentityProvider, userP
 	return nil
 }
 
+// Generate JWT token
+func generateJWTToken(tokenString string) (string, error) {
+	claims := jwt.MapClaims{
+		"token": tokenString,
+		"exp":   time.Now().Add(time.Hour * 1).Unix(), // Token expiry time
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
 func loginUser(client *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, clientID string, user UserLogin) (*cognitoidentityprovider.AuthenticationResultType, error) {
 	// Log in user using InitiateAuth
 	result, err := client.InitiateAuth(&cognitoidentityprovider.InitiateAuthInput{
@@ -152,6 +186,6 @@ func loginUser(client *cognitoidentityprovider.CognitoIdentityProvider, userPool
 	return result.AuthenticationResult, nil
 }
 
-/*curl -X POST -H "Content-Type: application/json" -d '{"name": "Thaksin", "email": "test@example.com", "password": "Kasay@69"}' http://localhost:8080/register
-  curl -X POST -H "Content-Type: application/json" -d '{"email": "test@example.com", "password": "Kasay@69"}' http://localhost:8080/login
+/*curl -X POST -H "Content-Type: application/json" -d "{\"name\": \"Thaksin\", \"email\": \"test@example.com\", \"password\": \"Password@69\"}" http://localhost:8080/register
+  curl -X POST -H "Content-Type: application/json" -d "{\"email\": \"test@example.com\", \"password\": \"Password@69\"}" http://localhost:8080/login
 */
