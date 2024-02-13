@@ -13,7 +13,7 @@ type DatabaseConfig struct {
 }
 
 type IAMConfig struct {
-	Key string
+	Key    string
 	Secret string
 }
 
@@ -33,6 +33,7 @@ type AppConfig struct {
 	Database DatabaseConfig
 	IAM      IAMConfig
 	S3       S3Config
+	Cognito  CognitoConfig
 }
 
 // initializes and returns the application configuration
@@ -46,7 +47,7 @@ func NewAppConfig() *AppConfig {
 	}
 
 	iamConfig := IAMConfig{
-		Key: os.Getenv("AWS_ACCESS_KEY_ID"),
+		Key:    os.Getenv("AWS_ACCESS_KEY_ID"),
 		Secret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 	}
 
@@ -55,9 +56,16 @@ func NewAppConfig() *AppConfig {
 		Region:     os.Getenv("REGION"),
 	}
 
+	cognitoConfig := CognitoConfig{
+		UserPoolID: os.Getenv(""),
+		ClientID:   os.Getenv(""),
+		Region:     os.Getenv(""),
+	}
+
 	return &AppConfig{
 		Database: dbConfig,
 		IAM:      iamConfig,
 		S3:       s3Config,
+		Cognito:  cognitoConfig,
 	}
 }
