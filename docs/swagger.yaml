@@ -1,6 +1,39 @@
+definitions:
+  entity.UserLogin:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  entity.UserRegistration:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: User login info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserLogin'
+      produces:
+      - application/json
+      responses: {}
+      summary: Log in with email and password
   /postVideo:
     post:
       consumes:
@@ -28,6 +61,22 @@ paths:
           schema:
             type: object
       summary: Upload a video
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserRegistration'
+      produces:
+      - application/json
+      responses: {}
+      summary: Sign up a new user
   /uploadtoS3:
     post:
       consumes:

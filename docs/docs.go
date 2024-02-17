@@ -15,6 +15,30 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/login": {
+            "post": {
+                "description": "Authenticate user with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Log in with email and password",
+                "parameters": [
+                    {
+                        "description": "User login info",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserLogin"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/postVideo": {
             "post": {
                 "description": "Uploads a video file and processes it",
@@ -56,6 +80,30 @@ const docTemplate = `{
                 }
             }
         },
+        "/signup": {
+            "post": {
+                "description": "Register a new user with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Sign up a new user",
+                "parameters": [
+                    {
+                        "description": "User registration info",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.UserRegistration"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/uploadtoS3": {
             "post": {
                 "description": "Uploads a file to S3 bucket",
@@ -95,6 +143,33 @@ const docTemplate = `{
                             "type": "object"
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entity.UserLogin": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserRegistration": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         }
