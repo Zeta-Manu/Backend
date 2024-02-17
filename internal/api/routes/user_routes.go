@@ -10,7 +10,7 @@ import (
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
 )
 
-func InitUserRoute(router *gin.Engine, idpAdapter interfaces.IIdentityProvider) {
+func InitUserRoutes(router *gin.Engine, idpAdapter interfaces.IIdentityProvider) {
 	idpController := controllers.NewUserController(idpAdapter)
 
 	docs.SwaggerInfo.BasePath = "/user"

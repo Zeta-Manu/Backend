@@ -20,16 +20,19 @@ type CognitoAdapter struct {
 	ClientID string
 }
 
-func NewCognitoAdapter(region, poolID string, clientID string) *CognitoAdapter {
-	sess := session.Must(session.NewSession(&aws.Config{
+func NewCognitoAdapter(region, poolID string, clientID string) (*CognitoAdapter, error) {
+	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(region),
-	}))
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AWS session: %w", err)
+	}
 
 	return &CognitoAdapter{
 		client:   cognitoidentityprovider.New(sess),
 		PoolID:   poolID,
 		ClientID: clientID,
-	}
+	},nil
 }
 
 func (a *CognitoAdapter) Register(ctx context.Context, userRegisteration entity.UserRegistration) (string, error) {
