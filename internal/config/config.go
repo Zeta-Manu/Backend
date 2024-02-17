@@ -57,9 +57,9 @@ func NewAppConfig() *AppConfig {
 	}
 
 	cognitoConfig := CognitoConfig{
-		UserPoolID: os.Getenv(""),
-		ClientID:   os.Getenv(""),
-		Region:     os.Getenv(""),
+		UserPoolID: os.Getenv("COGNITO_POOL_ID"),
+		ClientID:   os.Getenv("COGNITO_CLIENT_ID"),
+		Region:     os.Getenv("REGION"),
 	}
 
 	return &AppConfig{

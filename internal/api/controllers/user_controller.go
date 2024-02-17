@@ -34,6 +34,7 @@ func (c *UserController) SignUp(ctx *gin.Context) {
 	}
 	result, err := c.identityproviderAdapter.Register(ctx, userRegistration)
 	if err != nil {
+		// FIX: Handle Additonal Error like InvalidPasswordException and other
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -51,6 +52,7 @@ func (c *UserController) LogIn(ctx *gin.Context) {
 	var userLogin entity.UserLogin
 	fmt.Println(userLogin.Email)
 	if err := ctx.ShouldBindJSON(&userLogin); err != nil {
+		// FIX: Handle Additional Error like NotAuthorizedException
 		ctx.JSON(http.StatusBadRequest, gin.H{"error here": err.Error()})
 		return
 	}
