@@ -19,16 +19,16 @@ func NewFileUploader(s3Adapter s3.S3Adapter) *FileUploader {
 	}
 }
 
-// @Summary Save video to S3
-// @Produce json
-// @Description Uploads a file to S3 bucket
-// @Accept mpfd
-// @Produce json
-// @Param file formData file true "File to upload"
-// @Success 200 {string} string "File uploaded successfully"
-// @Failure 400 {object} object "Bad Request"
-// @Failure 500 {object} object "Internal Server Error"
-// @Router /uploadtoS3 [post]
+//	@Summary		Save video to S3
+//	@Produce		json
+//	@Description	Uploads a file to S3 bucket
+//	@Accept			mpfd
+//	@Produce		json
+//	@Param			file	formData	file	true	"File to upload"
+//	@Success		200		{string}	string	"File uploaded successfully"
+//	@Failure		400		{object}	object	"Bad Request"
+//	@Failure		500		{object}	object	"Internal Server Error"
+//	@Router			/uploadtoS3 [post]
 func (fc *FileUploader) UploadFile(c *gin.Context) {
 	// Get the uploaded file
 	file, err := c.FormFile("file")

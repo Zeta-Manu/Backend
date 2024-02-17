@@ -26,15 +26,15 @@ func NewVideoController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter) *V
 	}
 }
 
-// @Summary	Upload a video
-// @Description Uploads a video file and processes it
-// @Accept mpfd
-// @Produce	json
-// @Param video	formData	file	true	"Vidoe File"
-// @Success 200 {string} string "File uploaded successfully"
-// @Failure 400 {object} object "Bad Request"
-// @Failure 500 {object} object "Internal Server Error"
-// @Router /postVideo [post]
+//	@Summary		Upload a video
+//	@Description	Uploads a video file and processes it
+//	@Accept			mpfd
+//	@Produce		json
+//	@Param			video	formData	file	true	"Vidoe File"
+//	@Success		200		{string}	string	"File uploaded successfully"
+//	@Failure		400		{object}	object	"Bad Request"
+//	@Failure		500		{object}	object	"Internal Server Error"
+//	@Router			/postVideo [post]
 func (vc *VideoController) PostVideo(c *gin.Context) {
 	// Get the uploaded video file from the request
 	file, header, err := c.Request.FormFile("video")

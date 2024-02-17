@@ -11,14 +11,12 @@ import (
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
-	"github.com/Zeta-Manu/Backend/internal/adapters/identityprovider"
 )
 
-func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateService *translate.Translate, identityProviderAdapter identityprovider.identityproviderAdapter) {
+func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateService *translate.Translate) {
 	videoController := controllers.NewVideoController(dbAdapter, s3Adapter)
 	fileUploader := controllers.NewFileUploader(s3Adapter)
 	Trans := translator.NewTranslator(translateService)
-	identiyProvider := controllers.NewUserController(identityproviderAdapter)
 
 	docs.SwaggerInfo.BasePath = "/api"
 	api := router.Group("/api")
@@ -30,5 +28,4 @@ func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S
 
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, url))
-	InitUserRoute(router, identiyProvider)
 }

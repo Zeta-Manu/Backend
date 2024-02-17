@@ -8,8 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 
+	"github.com/Zeta-Manu/Backend/internal/adapters/interfaces"
 	"github.com/Zeta-Manu/Backend/internal/domain/entity"
 )
+
+var _ interfaces.IIdentityProvider = (*CognitoAdapter)(nil)
 
 type CognitoAdapter struct {
 	client   *cognitoidentityprovider.CognitoIdentityProvider
