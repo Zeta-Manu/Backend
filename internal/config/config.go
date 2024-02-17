@@ -28,12 +28,17 @@ type CognitoConfig struct {
 	Region     string
 }
 
+type JWTConfig struct {
+	JWTPublicKey string
+}
+
 // The application configuration
 type AppConfig struct {
 	Database DatabaseConfig
 	IAM      IAMConfig
 	S3       S3Config
 	Cognito  CognitoConfig
+	JWT      JWTConfig
 }
 
 // initializes and returns the application configuration
@@ -62,10 +67,15 @@ func NewAppConfig() *AppConfig {
 		Region:     os.Getenv("REGION"),
 	}
 
+	jwtConfig := JWTConfig{
+		JWTPublicKey: os.Getenv("JWT_PUBLIC_KEY"),
+	}
+
 	return &AppConfig{
 		Database: dbConfig,
 		IAM:      iamConfig,
 		S3:       s3Config,
 		Cognito:  cognitoConfig,
+		JWT:      jwtConfig,
 	}
 }
