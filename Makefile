@@ -36,7 +36,7 @@ docker-stop:
 
 tidy:
 	go mod tidy
-	go get -u github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/swaggo/swag/cmd/swag@latest
 
 swag:
 	swag init -g cmd/app/main.go

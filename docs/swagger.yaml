@@ -1,8 +1,44 @@
+definitions:
+  entity.UserLogin:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  entity.UserRegistration:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
-  /video:
+  /login:
     post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: User login info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserLogin'
+      produces:
+      - application/json
+      responses: {}
+      summary: Log in with email and password
+  /postVideo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a video file and processes it
       parameters:
       - description: Vidoe File
         in: formData
@@ -11,6 +47,62 @@ paths:
         type: file
       produces:
       - application/json
-      responses: {}
+      responses:
+        "200":
+          description: File uploaded successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
       summary: Upload a video
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserRegistration'
+      produces:
+      - application/json
+      responses: {}
+      summary: Sign up a new user
+  /uploadtoS3:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a file to S3 bucket
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: File uploaded successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Save video to S3
 swagger: "2.0"

@@ -11,22 +11,30 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
+	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 )
 
 type VideoController struct {
-	db database.DBAdapter
+	dbAdapter database.DBAdapter
+	s3Adapter s3.S3Adapter
 }
 
-func NewVideoController(db database.DBAdapter) *VideoController {
+func NewVideoController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter) *VideoController {
 	return &VideoController{
-		db: db,
+		dbAdapter: dbAdapter,
+		s3Adapter: s3Adapter,
 	}
 }
 
-//	@Summary	Upload a video
-//	@Produce	json
-//	@Param		video	formData	file	true	"Vidoe File"
-//	@Router		/video [post]
+//	@Summary		Upload a video
+//	@Description	Uploads a video file and processes it
+//	@Accept			mpfd
+//	@Produce		json
+//	@Param			video	formData	file	true	"Vidoe File"
+//	@Success		200		{string}	string	"File uploaded successfully"
+//	@Failure		400		{object}	object	"Bad Request"
+//	@Failure		500		{object}	object	"Internal Server Error"
+//	@Router			/postVideo [post]
 func (vc *VideoController) PostVideo(c *gin.Context) {
 	// Get the uploaded video file from the request
 	file, header, err := c.Request.FormFile("video")
