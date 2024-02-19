@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create AWS session: %v", err)
 	}
-	Trans := translate.New(awsSession)
+	transAdapter := translate.New(awsSession)
 
 	idpAdapter, err := identityprovider.NewCognitoAdapter(appConfig.Cognito.Region, appConfig.Cognito.UserPoolID, appConfig.Cognito.ClientID)
 	if err != nil {
@@ -52,8 +52,9 @@ func main() {
 	r := gin.Default()
 
 	// Initialize routes
-	routes.InitRoutes(r, db, *s3Adapter, Trans)
+	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
 	routes.InitUserRoutes(r, idpAdapter)
+	routes.InitPredictRoutes(r, db, *s3Adapter, *appConfig)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

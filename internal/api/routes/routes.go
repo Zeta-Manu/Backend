@@ -18,6 +18,7 @@ func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S
 	fileUploader := controllers.NewFileUploader(s3Adapter)
 	Trans := translator.NewTranslator(translateService)
 
+	// TODO: Organize everything to new /predict API line
 	docs.SwaggerInfo.BasePath = "/api"
 	api := router.Group("/api")
 	{
