@@ -2,12 +2,12 @@ package s3
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type S3Adapter struct {
@@ -17,7 +17,7 @@ type S3Adapter struct {
 
 func NewS3Adapter(region, bucket string, creds *credentials.Credentials) (*S3Adapter, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
+		Region:      aws.String(region),
 		Credentials: creds,
 	})
 	if err != nil {
@@ -42,7 +42,7 @@ func (s *S3Adapter) GetObject(key string) ([]byte, error) {
 	}
 
 	defer result.Body.Close()
-	data, err := ioutil.ReadAll(result.Body)
+	data, err := io.ReadAll(result.Body)
 	if err != nil {
 		return nil, err
 	}
