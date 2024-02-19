@@ -24,7 +24,7 @@ func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S
 	{
 		api.POST("/postVideo", videoController.PostVideo)
 		api.POST("/uploadtoS3", fileUploader.UploadFile)
-		api.POST("/translate", Trans.TranslateText)
+		api.POST("/translate", Trans.TranslateText) // WARNING: Controllers missing!
 	}
 
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
