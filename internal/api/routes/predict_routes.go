@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
@@ -13,6 +14,7 @@ func InitPredictRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapt
 	predictController := controllers.NewPredictController(dbAdapter, s3Adapter)
 
 	// TODO: Fixed Swagger
+	docs.SwaggerInfo.BasePath = "/api"
 	user := router.Group("/api", middleware.AuthenticationMiddleware(cfg))
 	{
 		user.POST("/predict", predictController.Predict)

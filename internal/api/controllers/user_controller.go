@@ -22,6 +22,7 @@ func NewUserController(identityproviderAdapter interfaces.IIdentityProvider) *Us
 
 // @Summary		Sign up a new user
 // @Description	Register a new user with email and password
+// @Tags user
 // @Accept			json
 // @Produce		json
 // @Param			body	body		entity.UserRegistration											true	"User registration info"
@@ -44,6 +45,7 @@ func (c *UserController) SignUp(ctx *gin.Context) {
 
 // @Summary		Log in with email and password
 // @Description	Authenticate user with email and password
+// @Tags user
 // @Accept			json
 // @Produce		json
 // @Param			body	body		entity.UserLogin									true	"User login info"

@@ -34,6 +34,8 @@ paths:
       - application/json
       responses: {}
       summary: Log in with email and password
+      tags:
+      - user
   /postVideo:
     post:
       consumes:
@@ -61,6 +63,36 @@ paths:
           schema:
             type: object
       summary: Upload a video
+  /predict:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a video file to S3 and prepares it for machine learning
+        prediction
+      parameters:
+      - description: Video file to upload
+        in: formData
+        name: video
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload a video for prediction
+      tags:
+      - api
   /signup:
     post:
       consumes:
@@ -77,6 +109,8 @@ paths:
       - application/json
       responses: {}
       summary: Sign up a new user
+      tags:
+      - user
   /uploadtoS3:
     post:
       consumes:

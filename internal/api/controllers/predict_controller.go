@@ -23,6 +23,20 @@ func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter) 
 	}
 }
 
+// @Summary Upload a video for prediction
+// @Description Uploads a video file to S3 and prepares it for machine learning prediction
+// @Tags api
+// @Security BearerAuth
+// @SecurityDefinition BearerAuth
+// @SecurityDefinition.In header
+// @SecurityDefinition.Name Authorization
+// @SecurityDefinition.Type apiKey
+// @Accept  multipart/form-data
+// @Produce  json
+// @Param   video formData file true "Video file to upload"
+// @Success  200 {object} map[string]interface{}
+// @Failure  400 {object} map[string]interface{}
+// @Router /predict [post]
 func (c *PredictController) Predict(ctx *gin.Context) {
 	// Get the uploaded video file from the request
 	file, err := ctx.FormFile("video")
