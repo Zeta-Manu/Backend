@@ -16,7 +16,7 @@ import (
 func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateService *translate.Translate) {
 	videoController := controllers.NewVideoController(dbAdapter, s3Adapter)
 	fileUploader := controllers.NewFileUploader(s3Adapter)
-	Trans := translator.NewTranslator(translateService)
+	trans := translator.NewTranslator(translateService)
 
 	// TODO: Organize everything to new /predict API line
 	docs.SwaggerInfo.BasePath = "/api"
@@ -24,7 +24,7 @@ func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S
 	{
 		api.POST("/postVideo", videoController.PostVideo)
 		api.POST("/uploadtoS3", fileUploader.UploadFile)
-		api.POST("/translate", Trans.TranslateText) // WARNING: Controllers missing!
+		api.POST("/translate", trans.TranslateText) // WARNING: Controllers missing!
 	}
 
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")

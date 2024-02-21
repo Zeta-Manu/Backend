@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -48,6 +49,19 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
 	}
+	// Insert a record into the database
+	err = c.insertToS3Table(file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting record into database"})
+		return
+	}
+
+	// Send the video to the ML API
+	err = c.sendToML(file.Filename)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while sending video to ML API"})
+		return
+	}
 }
 
 func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) error {
@@ -73,8 +87,20 @@ func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) error {
 	return nil
 }
 
-func (c *PredictController) insertToS3Table() {
+func (c *PredictController) insertToS3Table(filename string) error {
+	// SQL query to insert a new record into the database
+	query := "INSERT INTO s3_table (filename, status) VALUES (?, ?)"
+
+	// Execute the query with the filename and status
+	_, err := c.dbAdapter.Exec(query, filename, "uploaded")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (c *PredictController) sendToML() {
+func (c *PredictController) sendToML(filename string) error {
+	fmt.Printf("Sending video %s to ML API\n", filename)
+	return nil
 }

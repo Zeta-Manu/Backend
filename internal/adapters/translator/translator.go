@@ -18,6 +18,14 @@ func NewTranslator(translateService *translate.Translate) *Translator {
 	}
 }
 
+// @Summary Translate text
+// @Description Translates the provided text into the target language
+// @Accept  json
+// @Produce  json
+// @Param text body string true "Text to translate"
+// @Param target_language body string true "Target language code"
+// @Success  200 {object} map[string]interface{} "{"input_text": "Input text", "translated_text": "Translated text", "accuracy":  0.80}"
+// @Router /translate [post]
 func (tc *Translator) TranslateText(c *gin.Context) {
 	// Get the input text and target language from the request
 	var request struct {

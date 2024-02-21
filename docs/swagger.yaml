@@ -111,6 +111,34 @@ paths:
       summary: Sign up a new user
       tags:
       - user
+  /translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates the provided text into the target language
+      parameters:
+      - description: Text to translate
+        in: body
+        name: text
+        required: true
+        schema:
+          type: string
+      - description: Target language code
+        in: body
+        name: target_language
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"input_text": "Input text", "translated_text": "Translated
+            text", "accuracy":  0.80}'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Translate text
   /uploadtoS3:
     post:
       consumes:
