@@ -32,7 +32,7 @@ func NewCognitoAdapter(region, poolID string, clientID string) (*CognitoAdapter,
 		client:   cognitoidentityprovider.New(sess),
 		PoolID:   poolID,
 		ClientID: clientID,
-	},nil
+	}, nil
 }
 
 func (a *CognitoAdapter) Register(ctx context.Context, userRegisteration entity.UserRegistration) (string, error) {
@@ -78,4 +78,92 @@ func (a *CognitoAdapter) Login(ctx context.Context, userLogin entity.UserLogin) 
 	}
 
 	return *result.AuthenticationResult.IdToken, nil
+}
+
+func (a *CognitoAdapter) GetUser(ctx context.Context, email string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+	input := &cognitoidentityprovider.AdminGetUserInput{
+		UserPoolId: aws.String(a.PoolID),
+		Username:   aws.String(email),
+	}
+
+	result, err := a.client.AdminGetUser(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return result, nil
+}
+
+func (a *CognitoAdapter) ConfirmRegistration(ctx context.Context, userRegistrationConfirm entity.UserRegistrationConfirm) error {
+	input := &cognitoidentityprovider.ConfirmSignUpInput{
+		ClientId:         aws.String(a.ClientID),
+		ConfirmationCode: aws.String(userRegistrationConfirm.ConfirmationCode),
+		Username:         aws.String(userRegistrationConfirm.Email),
+	}
+
+	_, err := a.client.ConfirmSignUp(input)
+	if err != nil {
+		return fmt.Errorf("failed to confirm sign up: %w", err)
+	}
+
+	return nil
+}
+
+func (a *CognitoAdapter) ResendConfirmationCode(ctx context.Context, email entity.Email) (string, error) {
+	input := &cognitoidentityprovider.ResendConfirmationCodeInput{
+		ClientId: aws.String(a.ClientID),
+		Username: aws.String(email.Email),
+	}
+
+	result, err := a.client.ResendConfirmationCode(input)
+	if err != nil {
+		return "", fmt.Errorf("failed to resend confirmation code: %w", err)
+	}
+
+	return *result.CodeDeliveryDetails.Destination, nil
+}
+
+func (a *CognitoAdapter) ForgotPassword(ctx context.Context, email entity.Email) (string, error) {
+	input := &cognitoidentityprovider.ForgotPasswordInput{
+		ClientId: aws.String(a.ClientID),
+		Username: aws.String(email.Email),
+	}
+
+	result, err := a.client.ForgotPassword(input)
+	if err != nil {
+		return "", fmt.Errorf("failed to initiate forgot password: %w", err)
+	}
+
+	return *result.CodeDeliveryDetails.Destination, nil
+}
+
+func (a *CognitoAdapter) ConfirmForgotPassword(ctx context.Context, userResetPassword entity.UserResetPassword) (*cognitoidentityprovider.ConfirmForgotPasswordOutput, error) {
+	input := &cognitoidentityprovider.ConfirmForgotPasswordInput{
+		ClientId:         aws.String(a.ClientID),
+		Username:         aws.String(userResetPassword.Email),
+		ConfirmationCode: aws.String(userResetPassword.ConfirmationCode),
+		Password:         aws.String(userResetPassword.NewPassword),
+	}
+
+	result, err := a.client.ConfirmForgotPassword(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to confirm forgot password: %w", err)
+	}
+
+	return result, err
+}
+
+func (a *CognitoAdapter) ChangePassword(ctx context.Context, accessToken string, userChangePassword entity.UserChangePassword) error {
+	input := &cognitoidentityprovider.ChangePasswordInput{
+		AccessToken:      aws.String(accessToken),
+		PreviousPassword: aws.String(userChangePassword.PreviousPassword),
+		ProposedPassword: aws.String(userChangePassword.ProposedPassword),
+	}
+
+	_, err := a.client.ChangePassword(input)
+	if err != nil {
+		return fmt.Errorf("failed to change password: %w", err)
+	}
+
+	return nil
 }
