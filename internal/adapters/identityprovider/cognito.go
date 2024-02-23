@@ -62,7 +62,7 @@ func (a *CognitoAdapter) Register(ctx context.Context, userRegisteration entity.
 	return *result.CodeDeliveryDetails.Destination, nil
 }
 
-func (a *CognitoAdapter) Login(ctx context.Context, userLogin entity.UserLogin) (string, error) {
+func (a *CognitoAdapter) Login(ctx context.Context, userLogin entity.UserLogin) (*entity.LoginResult, error) {
 	params := &cognitoidentityprovider.InitiateAuthInput{
 		AuthFlow: aws.String("USER_PASSWORD_AUTH"),
 		AuthParameters: map[string]*string{
@@ -74,10 +74,18 @@ func (a *CognitoAdapter) Login(ctx context.Context, userLogin entity.UserLogin) 
 
 	result, err := a.client.InitiateAuth(params)
 	if err != nil {
-		return "", fmt.Errorf("failed to initate auth: %w", err)
+		return nil, fmt.Errorf("failed to initate auth: %w", err)
 	}
 
-	return *result.AuthenticationResult.IdToken, nil
+	loginReturn := entity.LoginResult{
+		AccessToken:  result.AuthenticationResult.AccessToken,
+		ExpiresIn:    result.AuthenticationResult.ExpiresIn,
+		IdToken:      result.AuthenticationResult.IdToken,
+		RefreshToken: result.AuthenticationResult.RefreshToken,
+		TokenType:    result.AuthenticationResult.TokenType,
+	}
+
+	return &loginReturn, nil
 }
 
 func (a *CognitoAdapter) GetUser(ctx context.Context, email string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
