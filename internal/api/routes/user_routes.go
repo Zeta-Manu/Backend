@@ -5,13 +5,15 @@ import (
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/interfaces"
 	"github.com/Zeta-Manu/Backend/internal/api/controllers"
+	"github.com/Zeta-Manu/Backend/internal/api/middleware"
+	"github.com/Zeta-Manu/Backend/internal/config"
 )
 
-func InitUserRoutes(router *gin.Engine, idpAdapter interfaces.IIdentityProvider) {
+func InitUserRoutes(router *gin.Engine, cfg config.AppConfig, idpAdapter interfaces.IIdentityProvider) {
 	idpController := controllers.NewUserController(idpAdapter)
 
 	// TODO: Fixed Swagger
-	user := router.Group("/user")
+	user := router.Group("/api/user")
 	{
 		user.POST("/signup", idpController.SignUp)
 		user.POST("/login", idpController.LogIn)
@@ -20,6 +22,7 @@ func InitUserRoutes(router *gin.Engine, idpAdapter interfaces.IIdentityProvider)
 		user.GET("/:email", idpController.GetUser)
 		user.POST("/forgot-password", idpController.ForgotPassword)
 		user.POST("/confirm-forgot-password", idpController.ConfirmForgotPassword)
-		user.POST("/change-password", idpController.ChangePassword)
+		// route with middleware
+		user.POST("/change-password", middleware.AuthenticationMiddleware(cfg), idpController.ChangePassword)
 	}
 }
