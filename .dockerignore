@@ -1,0 +1,8 @@
+# Ignore the Makefile
+Makefile
+
+# Ignore all .vscode files
+.vscode/
+
+# Ignore all backup files
+*.bak
