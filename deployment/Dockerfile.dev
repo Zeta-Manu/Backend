@@ -1,5 +1,5 @@
 # Use a development-specific base image with Go and Air
-FROM golang:1.21-alpine as development
+FROM golang:1.22-alpine as development
 
 # Set environment variables for AWS SDK
 ENV AWS_SDK_LOAD_CONFIG=true
