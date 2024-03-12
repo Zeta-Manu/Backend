@@ -1,4 +1,38 @@
+basePath: /api
 definitions:
+  entity.Email:
+    properties:
+      email:
+        type: string
+    type: object
+  entity.ErrorWrapper:
+    properties:
+      error: {}
+    type: object
+  entity.LoginResult:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      id_token:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  entity.ResponseWrapper:
+    properties:
+      data: {}
+    type: object
+  entity.UserChangePassword:
+    properties:
+      previous_password:
+        type: string
+      proposed_password:
+        type: string
+    type: object
   entity.UserLogin:
     properties:
       email:
@@ -15,25 +49,29 @@ definitions:
       password:
         type: string
     type: object
+  entity.UserRegistrationConfirm:
+    properties:
+      confirmation_code:
+        type: string
+      email:
+        type: string
+    type: object
+  entity.UserResetPassword:
+    properties:
+      confirmation_code:
+        type: string
+      email:
+        type: string
+      new_password:
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact: {}
+  description: server
+  title: Manu Swagger API
+  version: "1.0"
 paths:
-  /login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate user with email and password
-      parameters:
-      - description: User login info
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/entity.UserLogin'
-      produces:
-      - application/json
-      responses: {}
-      summary: Log in with email and password
   /postVideo:
     post:
       consumes:
@@ -61,22 +99,6 @@ paths:
           schema:
             type: object
       summary: Upload a video
-  /signup:
-    post:
-      consumes:
-      - application/json
-      description: Register a new user with email and password
-      parameters:
-      - description: User registration info
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/entity.UserRegistration'
-      produces:
-      - application/json
-      responses: {}
-      summary: Sign up a new user
   /uploadtoS3:
     post:
       consumes:
@@ -105,4 +127,220 @@ paths:
           schema:
             type: object
       summary: Save video to S3
+  /user/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change the password for the authenticated user
+      parameters:
+      - description: Bearer {token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: User change password info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserChangePassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      security:
+      - BearerAuth: []
+      summary: Change user password
+      tags:
+      - User
+  /user/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirm a user's registration using the provided confirmation information
+      parameters:
+      - description: User registration confirmation info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserRegistrationConfirm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "408":
+          description: Request Timeout
+      summary: Confirm user registration
+      tags:
+      - User
+  /user/confirm-forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiate the password reset process for a user by sending a reset
+        link to their email
+      parameters:
+      - description: Email address of the user
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserResetPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      summary: Forgot Password
+      tags:
+      - User
+  /user/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiate the password reset process for a user by sending a reset
+        link to their email
+      parameters:
+      - description: Email address of the user
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Email'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      summary: Forogot Password
+      tags:
+      - User
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: User login info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserLogin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/entity.ResponseWrapper'
+            - properties:
+                data:
+                  $ref: '#/definitions/entity.LoginResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      summary: Log in with email and password
+      tags:
+      - User
+  /user/resend-confirm:
+    post:
+      consumes:
+      - application/json
+      description: Resend the confirmation code to the provided email address
+      parameters:
+      - description: Email address to resend the confirmation code to
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Email'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      summary: Resend confirmation code
+      tags:
+      - User
+  /user/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration info
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UserRegistration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ResponseWrapper'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/entity.ErrorWrapper'
+      summary: Sign up a new user
+      tags:
+      - User
 swagger: "2.0"
