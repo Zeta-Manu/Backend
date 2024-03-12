@@ -3,10 +3,7 @@ package routes
 import (
 	"github.com/aws/aws-sdk-go/service/translate"
 	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 
-	docs "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
@@ -18,15 +15,10 @@ func InitRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S
 	fileUploader := controllers.NewFileUploader(s3Adapter)
 	trans := translator.NewTranslator(translateService)
 
-	// TODO: Organize everything to new /predict API line
-	docs.SwaggerInfo.BasePath = "/api"
 	api := router.Group("/api")
 	{
 		api.POST("/postVideo", videoController.PostVideo)
 		api.POST("/uploadtoS3", fileUploader.UploadFile)
 		api.POST("/translate", trans.TranslateText) // WARNING: Controllers missing!
 	}
-
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, url))
 }

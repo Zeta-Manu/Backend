@@ -10,13 +10,14 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwk"
 
 	"github.com/Zeta-Manu/Backend/internal/config"
+	"github.com/Zeta-Manu/Backend/utils"
 )
 
 func AuthenticationMiddleware(cfg config.AppConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientToken := c.Request.Header.Get("Authorization")
-		if clientToken == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "No Authorization Header Provided"})
+		token, err := utils.ParseToken(c.Request)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
@@ -30,19 +31,20 @@ func AuthenticationMiddleware(cfg config.AppConfig) gin.HandlerFunc {
 		}
 
 		// Verify the Token
-		token, err := verifyToken(clientToken, keySet)
+		validtoken, err := verifyToken(token, keySet)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			c.Abort()
 			return
 		}
 
-		if !token.Valid {
+		if !validtoken.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Token"})
 			c.Abort()
 			return
 		}
 
+		c.Set("token", token)
 		c.Next()
 	}
 }
