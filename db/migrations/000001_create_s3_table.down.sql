@@ -1,0 +1,1 @@
+DROP TABLE S3_Table;

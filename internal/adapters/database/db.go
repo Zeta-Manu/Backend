@@ -49,120 +49,26 @@ func (db *Database) Close() error {
 	return nil
 }
 
-func (db *Database) CreateTables() error{
-    // UserInformation
-    _, err =db.Conn.Exec("CREATE TABLE UserInformation (
-        email VARCHAR(100) NOT NULL PRIMARY KEY,
-        password VARCHAR(255) NOT NULL,
-        profile_picture_id INT
-    )"
-    )
-    if err!=nil{
-        log.Fatal(error)
-    }
-    // User
-    _, err =db.Conn.Exec("CREATE TABLE User
-    (
-        uid INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        username VARCHAR(50) NOT NULL,
-        FOREIGN KEY (email) REFERENCES UserInformation(email)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //UserActivity
-    _, err = db.Conn.Exec("CREATE TABLE UserActivity (
-        uid INT NOT NULL,
-        last_lid INT,
-        last_timestamp TIMESTAMP,
-        FOREIGN KEY (uid) REFERENCES User(uid)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //UserStat
-    _,err=db.Conn.Exec("CREATE TABLE UserStat (
-        uid INT NOT NULL,
-        history JSON,
-        confident JSON,
-        FOREIGN KEY (uid) REFERENCES User(uid)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //VideoRecord
-    _,err = db.Conn.Exec("CREATE TABLE VideoRecord (
-        vid INT AUTO_INCREMENT PRIMARY KEY,
-        handsign_id INT,
-        user_id INT,
-        record_time TIMESTAMP,
-        S3_filename VARCHAR(255),
-        FOREIGN KEY (handsign_id) REFERENCES HandSign(id),
-        FOREIGN KEY (user_id) REFERENCES User(uid)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //Learning
-    _,err=db.Conn.Exec("CREATE TABLE Learning (
-        lid INT AUTO_INCREMENT PRIMARY KEY,
-        lesson_name VARCHAR(255) NOT NULL
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //HandSign
-    _,err = db.Conn.Exec("CREATE TABLE HandSign (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        handsign VARCHAR(255) NOT NULL
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //Translation
-    _,err = db.Conn.Exec("CREATE TABLE Translation (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        handsign_id INT,
-        language_id INT,
-        en_meaning VARCHAR(255) NOT NULL,
-        text TEXT,
-        FOREIGN KEY (handsign_id) REFERENCES HandSign(id),
-        FOREIGN KEY (language_id) REFERENCES Language(id)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //LessonHandSign
-    _,err = db.Conn.Exec("CREATE TABLE LessonHandSign (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        lesson_id INT,
-        handsign_id INT,
-        FOREIGN KEY (lesson_id) REFERENCES Learning(lid),
-        FOREIGN KEY (handsign_id) REFERENCES HandSign(id)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //Language
-    _,err = db.Conn.Exec("CREATE TABLE Language (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        language_id VARCHAR(10) NOT NULL UNIQUE
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    //LessonTranslation
-    _err=db.Conn.Exec("CREATE TABLE LessonTranslation (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        lesson_id INT,
-        language_id INT,
-        translation_text TEXT,
-        FOREIGN KEY (lesson_id) REFERENCES Learning(lid),
-        FOREIGN KEY (language_id) REFERENCES Language(id)
-    )")
-    if err!=nil{
-        log.Fatal(error)
-    }
-    fmt.Println("Tables Created")
-}
+/*func (db *Database) InitMigrate() error {
+	db, err := sql.Open("mysql", "user:password@tcp(host:port)/dbname?multiStatements=true")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file:///migrations",
+		"mysql", driver)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := m.Up(); err != nil {
+		log.Fatal(err)
+	}
+}*/

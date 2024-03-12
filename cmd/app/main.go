@@ -77,7 +77,7 @@ func main() {
 
 	// Initialize routes
 	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
-	routes.InitUserRoutes(r, idpAdapter)
+	routes.InitUserRoutes(r, *appConfig, idpAdapter)
 	routes.InitPredictRoutes(r, db, *s3Adapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
