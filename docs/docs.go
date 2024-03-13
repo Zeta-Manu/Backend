@@ -56,6 +56,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/predict": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads a video file to S3 and prepares it for machine learning prediction",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "api"
+                ],
+                "summary": "Upload a video for prediction",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Video file to upload",
+                        "name": "video",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/translate": {
+            "post": {
+                "description": "Translates the provided text into the target language",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Translate text",
+                "parameters": [
+                    {
+                        "description": "Text to translate",
+                        "name": "text",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Target language code",
+                        "name": "target_language",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"input_text\": \"Input text\", \"translated_text\": \"Translated text\", \"accuracy\":  0.80}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/uploadtoS3": {
             "post": {
                 "description": "Uploads a file to S3 bucket",
@@ -254,7 +340,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "Forogot Password",
+                "summary": "Forgot Password",
                 "parameters": [
                     {
                         "description": "Email address of the user",

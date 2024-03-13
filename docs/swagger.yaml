@@ -99,6 +99,64 @@ paths:
           schema:
             type: object
       summary: Upload a video
+  /predict:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a video file to S3 and prepares it for machine learning
+        prediction
+      parameters:
+      - description: Video file to upload
+        in: formData
+        name: video
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload a video for prediction
+      tags:
+      - api
+  /translate:
+    post:
+      consumes:
+      - application/json
+      description: Translates the provided text into the target language
+      parameters:
+      - description: Text to translate
+        in: body
+        name: text
+        required: true
+        schema:
+          type: string
+      - description: Target language code
+        in: body
+        name: target_language
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"input_text": "Input text", "translated_text": "Translated
+            text", "accuracy":  0.80}'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Translate text
   /uploadtoS3:
     post:
       consumes:
@@ -249,7 +307,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/entity.ErrorWrapper'
-      summary: Forogot Password
+      summary: Forgot Password
       tags:
       - User
   /user/login:
