@@ -40,3 +40,23 @@ tidy:
 
 swag:
 	swag init -g cmd/app/main.go
+
+DB_URL = "mysql://root:password@tcp(localhost:3307)/manu"
+MIGRATIONS_PATH = db/migrations
+
+migrate:
+	@echo "Please specifiy 'up' or 'down' as a sub-target"
+	@echo $(DB_URL)
+
+migrate-install:
+	go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+migrate-up:
+	@echo "Running migrations up..."
+	migrate -database $(DB_URL) -path $(MIGRATIONS_PATH) up
+
+migrate-down:
+	@echo "Running migrations down..."
+	migrate -database $(DB_URL) -path $(MIGRATIONS_PATH) down
+
+.PHONY: migrate migrate-up migrate-down migrate-install
