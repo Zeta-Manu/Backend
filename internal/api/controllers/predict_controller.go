@@ -8,6 +8,7 @@ import (
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
+	"github.com/Zeta-Manu/Backend/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,12 +46,12 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No video file provided"})
 		return
 	}
-	err = c.uploadVideoToS3(file)
+	s3link, err := c.uploadVideoToS3(file)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
 	}
 	// Insert a record into the database
-	err = c.insertToS3Table(file.Filename)
+	err = c.insertToS3Table(file.Filename, s3link)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting record into database"})
 		return
@@ -64,32 +65,34 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	}
 }
 
-func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) error {
+func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string, error) {
 	// Open the file
 	uploadedFile, err := file.Open()
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer uploadedFile.Close()
 
 	// Read the file data
 	fileData, err := io.ReadAll(uploadedFile)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Upload the file to S3
 	err = c.s3Adapter.PutObject(file.Filename, fileData)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	// Construct the S3 URL
+	s3link := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", config.NewAppConfig().S3.BucketName, file.Filename)
+	return s3link, nil
 }
 
-func (c *PredictController) insertToS3Table(filename string) error {
+func (c *PredictController) insertToS3Table(filename string, s3link string) error {
 	// SQL query to insert a new record into the database
-	query := "INSERT INTO s3_table (filename, status) VALUES (?, ?)"
+	query := "INSERT INTO s3_table (filename, status,s3link) VALUES (?, ?,?)"
 
 	// Execute the query with the filename and status
 	_, err := c.dbAdapter.Exec(query, filename, "uploaded")
