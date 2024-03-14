@@ -18,9 +18,8 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	docs "github.com/Zeta-Manu/Backend/docs"
+	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
-	"github.com/Zeta-Manu/Backend/internal/adapters/identityprovider"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
@@ -58,11 +57,6 @@ func main() {
 	}
 	transAdapter := translate.New(awsSession)
 
-	idpAdapter, err := identityprovider.NewCognitoAdapter(appConfig.Cognito.Region, appConfig.Cognito.UserPoolID, appConfig.Cognito.ClientID)
-	if err != nil {
-		log.Fatalf("Failed to connect to Cognito: %v", err)
-	}
-
 	// Create a Gin router
 	r := gin.Default()
 
@@ -73,11 +67,8 @@ func main() {
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(corsConfig))
 
-	docs.SwaggerInfo.BasePath = "/api"
-
 	// Initialize routes
 	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
-	routes.InitUserRoutes(r, *appConfig, idpAdapter)
 	routes.InitPredictRoutes(r, db, *s3Adapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

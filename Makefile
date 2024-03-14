@@ -15,8 +15,10 @@ docker-run-dev:
 
 # Build and Run Development
 dev:
-	docker-compose build
 	docker-compose up
+
+dev-build:
+	docker-compose up --build
 
 dev-stop:
 	docker-compose down
@@ -37,6 +39,9 @@ docker-stop:
 tidy:
 	go mod tidy
 	go install github.com/swaggo/swag/cmd/swag@latest
+
+vendor:
+	go mod vendor
 
 swag:
 	swag init -g cmd/app/main.go

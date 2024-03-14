@@ -6,3 +6,6 @@ Makefile
 
 # Ignore all backup files
 *.bak
+
+# Ignore .env
+.env
