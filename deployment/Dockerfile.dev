@@ -13,6 +13,7 @@ ARG S3_BUCKET
 ARG REGION
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
+ARG JWT_PUBLIC_KEY
 
 WORKDIR /app
 
@@ -24,7 +25,8 @@ COPY go.mod .
 COPY go.sum .
 
 # Download dependencies
-RUN go mod download
+COPY vendor ./vendor
+RUN go mod vendor
 
 # Copy the entire project into the container
 COPY . .
