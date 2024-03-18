@@ -52,26 +52,26 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No video file provided"})
 		return
 	}
-	s3_links, err := c.uploadVideoToS3(file)
+	s3Link, err := c.uploadVideoToS3(file)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
 	}
 	// Insert a record into the database
-	err = c.insertToS3Table(file.Filename, s3_links)
+	err = c.insertToS3Table(file.Filename, s3Link)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting record into database"})
 		return
 	}
 
 	// Send the video to the ML API
-	infer, err := c.sendToML(s3link)
+	infer, err := c.sendToML(s3Link)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while sending video to ML API"})
 		return
 	}
 
 	// TODO: Read Infer and Translate it using Translater
-	fmt.Println(infer)
+	fmt.Printf("%v\n", infer)
 }
 
 func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string, error) {
@@ -95,16 +95,16 @@ func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string,
 	}
 
 	// Construct the S3 URL
-	s3_links := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", config.NewAppConfig().S3.BucketName, file.Filename)
-	return s3_links, nil
+	s3Link := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", config.NewAppConfig().S3.BucketName, file.Filename)
+	return s3Link, nil
 }
 
-func (c *PredictController) insertToS3Table(filename string, s3_links string) error {
+func (c *PredictController) insertToS3Table(sub string, s3Link string) error {
 	// SQL query to insert a new record into the database
 	query := "INSERT INTO S3_Table (sub, s3_links) VALUES (?, ?) ON DUPLICATE KEY UPDATE s3_links = JSON_ARRAY_APPEND(COALESCE(s3_links, JSON_ARRAY()), '$', ?)"
 
 	// Execute the query with the filename and status
-	_, err := c.dbAdapter.Exec(query, filename, s3_links, s3_links)
+	_, err := c.dbAdapter.Exec(query, sub, s3Link)
 	if err != nil {
 		return err
 	}
