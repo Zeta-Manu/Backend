@@ -21,6 +21,7 @@ import (
 	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
+	"github.com/Zeta-Manu/Backend/internal/adapters/sagemaker"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
 )
@@ -49,6 +50,12 @@ func main() {
 		log.Fatalf("Failed to connect to S3: %v", err)
 	}
 
+	sagemakerAdapter, err := sagemaker.NewSageMakerAdapter(appConfig.S3.Region)
+	if err != nil {
+		log.Fatalf("Failed to connect to Sagemaker: %v", err)
+	}
+
+	// FIX: Make this an adapter
 	awsSession, err := session.NewSession(&aws.Config{
 		Region: aws.String(appConfig.S3.Region),
 	})
@@ -69,7 +76,7 @@ func main() {
 
 	// Initialize routes
 	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
-	routes.InitPredictRoutes(r, db, *s3Adapter, *appConfig)
+	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
