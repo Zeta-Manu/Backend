@@ -61,6 +61,9 @@ const docTemplate = `{
                 "security": [
                     {
                         "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Uploads a video file to S3 and prepares it for machine learning prediction",
@@ -75,6 +78,13 @@ const docTemplate = `{
                 ],
                 "summary": "Upload a video for prediction",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "file",
                         "description": "Video file to upload",

@@ -12,6 +12,7 @@ import (
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/sagemaker"
+	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/config"
 	valueobjects "github.com/Zeta-Manu/Backend/internal/domain/valueObjects"
 )
@@ -21,13 +22,15 @@ type PredictController struct {
 	sageMakerAdapter sagemaker.SageMakerAdapter
 	dbAdapter        database.DBAdapter
 	s3Adapter        s3.S3Adapter
+	translator       *translator.Translator
 }
 
-func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter) *PredictController {
+func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator *translator.Translator) *PredictController {
 	return &PredictController{
 		dbAdapter:        dbAdapter,
 		s3Adapter:        s3Adapter,
 		sageMakerAdapter: sagemakerAdapter,
+		translator:       translator,
 	}
 }
 
@@ -41,9 +44,11 @@ func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, 
 // @SecurityDefinition.Type apiKey
 // @Accept  multipart/form-data
 // @Produce  json
+// @Param Authorization header string true "Bearer {token}"
 // @Param   video formData file true "Video file to upload"
 // @Success  200 {object} map[string]interface{}
 // @Failure  400 {object} map[string]interface{}
+// @Security BearerAuth
 // @Router /predict [post]
 func (c *PredictController) Predict(ctx *gin.Context) {
 	// Get the uploaded video file from the request
@@ -70,8 +75,22 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Read Infer and Translate it using Translater
-	fmt.Printf("%v\n", infer)
+	// Process the returned data from SageMaker
+	processedData, err := c.processMLResult(infer)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error processing ML result"})
+		return
+	}
+
+	// Translate the processed data
+	translatedData, err := c.translateData(processedData)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error translating data"})
+		return
+	}
+
+	// Return the translated data to the client
+	ctx.JSON(http.StatusOK, gin.H{"result": translatedData})
 }
 
 func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string, error) {
@@ -130,7 +149,7 @@ func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
 	}
 
 	const (
-		ENDPOINTNAME = "endpoint-placeholder"
+		ENDPOINTNAME = "asl-deployment"
 		CONTENTTYPE  = "application/json"
 	)
 
@@ -140,4 +159,27 @@ func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (c *PredictController) processMLResult(infer []byte) (string, error) {
+	// The inference result is a JSON string
+	var result map[string]interface{}
+	err := json.Unmarshal(infer, &result)
+	if err != nil {
+		return "", err
+	}
+
+	// Process the result as needed
+	label := result["label"].(string)
+
+	return label, nil
+}
+
+func (c *PredictController) translateData(data string) (string, error) {
+	// Translate the data using the translator instance
+	translatedText, err := c.translator.TranslateText(data)
+	if err != nil {
+		return "", err
+	}
+	return translatedText, nil
 }
