@@ -57,13 +57,26 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No video file provided"})
 		return
 	}
+
+	// Debug: Log the filename of the uploaded video
+	fmt.Printf("Uploaded video filename: %s\n", file.Filename)
+
+	// Debug: Log the size of the uploaded video
+	fmt.Printf("Uploaded video size: %d bytes\n", file.Size)
+
 	s3Link, err := c.uploadVideoToS3(file)
 	if err != nil {
+		fmt.Printf("Error uploading video to S3: %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
 	}
+
+	// Debug: Log the S3 link of the uploaded video
+	fmt.Printf("S3 link of uploaded video: %s\n", s3Link)
+
 	// Insert a record into the database
 	err = c.insertToS3Table(file.Filename, s3Link)
 	if err != nil {
+		fmt.Printf("Error inserting record into database: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting record into database"})
 		return
 	}
@@ -71,6 +84,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Send the video to the ML API
 	infer, err := c.sendToML(s3Link)
 	if err != nil {
+		fmt.Printf("Error sending video to ML API: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while sending video to ML API"})
 		return
 	}
@@ -78,6 +92,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Process the returned data from SageMaker
 	processedData, err := c.processMLResult(infer)
 	if err != nil {
+		fmt.Printf("Error processing ML result: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error processing ML result"})
 		return
 	}
@@ -85,6 +100,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Translate the processed data
 	translatedData, accuracy, err := c.translateData(processedData, "TH")
 	if err != nil {
+		fmt.Printf("Error translating data: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error translating data"})
 		return
 	}
@@ -112,9 +128,11 @@ func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string,
 	if err != nil {
 		return "", err
 	}
-
+	appConfig := config.NewAppConfig()
 	// Construct the S3 URL
-	s3Link := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", config.NewAppConfig().S3.BucketName, file.Filename)
+	s3Link := "https://" + appConfig.S3.BucketName + ".s3." + appConfig.S3.Region + ".amazonaws.com/" + file.Filename
+	// Debug: Log the constructed S3 URL
+	fmt.Printf("Constructed S3 URL: %s\n", s3Link)
 	return s3Link, nil
 }
 
