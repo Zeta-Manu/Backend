@@ -22,6 +22,7 @@ import (
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/sagemaker"
+	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
 )
@@ -30,7 +31,7 @@ import (
 // @version 1.0
 // @description server
 
-// @host localhost:8080
+// @host localhost:8081
 // @BasePath /api
 
 func main() {
@@ -63,6 +64,7 @@ func main() {
 		log.Fatalf("Failed to create AWS session: %v", err)
 	}
 	transAdapter := translate.New(awsSession)
+	trans := translator.NewTranslator(transAdapter)
 
 	// Create a Gin router
 	r := gin.Default()
@@ -76,7 +78,7 @@ func main() {
 
 	// Initialize routes
 	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
-	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *appConfig)
+	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *trans, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

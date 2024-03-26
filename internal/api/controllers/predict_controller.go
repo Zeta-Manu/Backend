@@ -22,10 +22,10 @@ type PredictController struct {
 	sageMakerAdapter sagemaker.SageMakerAdapter
 	dbAdapter        database.DBAdapter
 	s3Adapter        s3.S3Adapter
-	translator       *translator.Translator
+	translator       translator.Translator
 }
 
-func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator *translator.Translator) *PredictController {
+func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator translator.Translator) *PredictController {
 	return &PredictController{
 		dbAdapter:        dbAdapter,
 		s3Adapter:        s3Adapter,
@@ -83,14 +83,14 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	}
 
 	// Translate the processed data
-	translatedData, err := c.translateData(processedData)
+	translatedData, accuracy, err := c.translateData(processedData, "TH")
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error translating data"})
 		return
 	}
 
 	// Return the translated data to the client
-	ctx.JSON(http.StatusOK, gin.H{"result": translatedData})
+	ctx.JSON(http.StatusOK, gin.H{"result": translatedData, "accuracy": accuracy})
 }
 
 func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string, error) {
@@ -149,7 +149,7 @@ func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
 	}
 
 	const (
-		ENDPOINTNAME = "asl-deployment"
+		ENDPOINTNAME = "ENDPOINT"
 		CONTENTTYPE  = "application/json"
 	)
 
@@ -169,17 +169,29 @@ func (c *PredictController) processMLResult(infer []byte) (string, error) {
 		return "", err
 	}
 
-	// Process the result as needed
-	label := result["label"].(string)
+	// Check if the "predictions" field exists
+	predictions, ok := result["predictions"]
+	if !ok {
+		return "", fmt.Errorf("predictions field not found in inference result")
+	}
 
-	return label, nil
-}
-
-func (c *PredictController) translateData(data string) (string, error) {
-	// Translate the data using the translator instance
-	translatedText, err := c.translator.TranslateText(data)
+	// Convert the predictions to JSON
+	predictionsJSON, err := json.Marshal(predictions)
 	if err != nil {
 		return "", err
 	}
-	return translatedText, nil
+
+	return string(predictionsJSON), nil
+}
+
+func (c *PredictController) translateData(data string, targetLanguage string) (string, float32, error) {
+	// Call the TranslateText function from the Translator struct
+	translatedText, accuracy, err := c.translator.TranslateText(data, targetLanguage)
+
+	// Check for errors
+	if err != nil {
+		return "", 0, err
+	}
+
+	return translatedText, accuracy, nil
 }
