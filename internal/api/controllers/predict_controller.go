@@ -138,10 +138,10 @@ func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string,
 
 func (c *PredictController) insertToS3Table(sub string, s3Link string) error {
 	// SQL query to insert a new record into the database
-	query := "INSERT INTO S3_Table (sub, s3_links) VALUES (?, ?) ON DUPLICATE KEY UPDATE s3_links = JSON_ARRAY_APPEND(COALESCE(s3_links, JSON_ARRAY()), '$', ?)"
+	query := "INSERT INTO S3_Table (sub, s3_links) VALUES (?, JSON_ARRAY(?))ON DUPLICATE KEY UPDATE s3_links = JSON_ARRAY_APPEND(COALESCE(s3_links, JSON_ARRAY()), '$', ?);"
 
 	// Execute the query with the filename and status
-	_, err := c.dbAdapter.Exec(query, sub, s3Link)
+	_, err := c.dbAdapter.Exec(query, sub, s3Link, s3Link)
 	if err != nil {
 		return err
 	}

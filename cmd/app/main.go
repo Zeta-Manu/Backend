@@ -46,7 +46,7 @@ func main() {
 	}
 	defer db.Close()
 
-	s3Adapter, err := s3.NewS3Adapter(appConfig.S3.BucketName, appConfig.S3.Region, creds)
+	s3Adapter, err := s3.NewS3Adapter(appConfig.S3.Region, appConfig.S3.BucketName, creds)
 	if err != nil {
 		log.Fatalf("Failed to connect to S3: %v", err)
 	}
