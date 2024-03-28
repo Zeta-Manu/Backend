@@ -166,12 +166,17 @@ func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
 		return nil, err
 	}
 
+	// Get SageMaker endpoint from AppConfig
+	appConfig := config.NewAppConfig()
+	endpointName := appConfig.SageMaker.ENDPOINT
+
+	// Define request constants
 	const (
-		ENDPOINTNAME = "ENDPOINT"
-		CONTENTTYPE  = "application/json"
+		ContentType = "application/json"
 	)
 
-	result, err := c.sageMakerAdapter.InvokeEndpoint(ENDPOINTNAME, CONTENTTYPE, jsonPayload)
+	// Invoke SageMaker endpoint
+	result, err := c.sageMakerAdapter.InvokeEndpoint(endpointName, ContentType, jsonPayload)
 	if err != nil {
 		fmt.Println("Error invoking SageMaker endpoint:", err)
 		return nil, err

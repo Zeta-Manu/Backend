@@ -1,6 +1,7 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,4 +38,24 @@ func (a *SageMakerAdapter) InvokeEndpoint(endpointName, contentType string, payl
 	}
 
 	return result.Body, nil
+}
+
+func (a *SageMakerAdapter) InvokeEndpointAsync(ctx context.Context, endpointName, contentType string, payload []byte, resultChan chan []byte, errChan chan error) error {
+	input := &sagemakerruntime.InvokeEndpointInput{
+		Body:         payload,
+		ContentType:  aws.String(contentType),
+		EndpointName: aws.String(endpointName),
+	}
+
+	go func() {
+		result, err := a.client.InvokeEndpointWithContext(ctx, input)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to invoke SageMaker endpoint: %v", err)
+			return
+		}
+
+		resultChan <- result.Body
+	}()
+
+	return nil
 }
