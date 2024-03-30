@@ -10,7 +10,9 @@ services:
     container_name: zeta-api-container
     working_dir: /app
     ports:
-     - "8081:8080"
+     - "8080:8080"
+    volumes:
+      - ./:/app
     depends_on:
       db:
         condition: service_healthy
@@ -22,7 +24,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: manu
     ports:
-     - "3307:3306"
+     - "3306:3306"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://mysql:3306"]
       timeout: 20s
