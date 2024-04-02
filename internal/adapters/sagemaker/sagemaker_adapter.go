@@ -40,22 +40,16 @@ func (a *SageMakerAdapter) InvokeEndpoint(endpointName, contentType string, payl
 	return result.Body, nil
 }
 
-func (a *SageMakerAdapter) InvokeEndpointAsync(ctx context.Context, endpointName, contentType string, payload []byte, resultChan chan []byte, errChan chan error) error {
-	input := &sagemakerruntime.InvokeEndpointInput{
-		Body:         payload,
-		ContentType:  aws.String(contentType),
+func (a *SageMakerAdapter) InvokeEndpointAsync(ctx context.Context, endpointName, contentType string, payload []byte) (string, error) {
+	input := &sagemakerruntime.InvokeEndpointAsyncInput{
 		EndpointName: aws.String(endpointName),
+		ContentType:  aws.String(contentType),
 	}
 
-	go func() {
-		result, err := a.client.InvokeEndpointWithContext(ctx, input)
-		if err != nil {
-			errChan <- fmt.Errorf("failed to invoke SageMaker endpoint: %v", err)
-			return
-		}
+	resp, err := a.client.InvokeEndpointAsyncWithContext(ctx, input)
+	if err != nil {
+		return "", fmt.Errorf("failed to invoke SageMaker endpoint asynchronously: %v", err)
+	}
 
-		resultChan <- result.Body
-	}()
-
-	return nil
+	return *resp.InferenceId, nil
 }

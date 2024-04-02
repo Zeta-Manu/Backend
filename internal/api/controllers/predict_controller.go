@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -175,13 +176,29 @@ func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
 		ContentType = "application/json"
 	)
 
-	// Invoke SageMaker endpoint
-	result, err := c.sageMakerAdapter.InvokeEndpoint(endpointName, ContentType, jsonPayload)
-	if err != nil {
-		fmt.Println("Error invoking SageMaker endpoint:", err)
+	// Set up channels for receiving results and errors
+	resultChan := make(chan []byte)
+	errChan := make(chan error)
+
+	// Invoke SageMaker endpoint asynchronously
+	ctx := context.Background()
+	go func() {
+		result, err := c.sageMakerAdapter.InvokeEndpointAsync(ctx, endpointName, ContentType, jsonPayload)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to invoke SageMaker endpoint: %v", err)
+			return
+		}
+		// Convert string result to []byte before sending it to the channel
+		resultBytes := []byte(result)
+		resultChan <- resultBytes
+	}()
+	// Wait for either a result or an error
+	select {
+	case result := <-resultChan:
+		return result, nil
+	case err := <-errChan:
 		return nil, err
 	}
-	return result, nil
 }
 
 func (c *PredictController) processMLResult(infer []byte) (string, error) {
