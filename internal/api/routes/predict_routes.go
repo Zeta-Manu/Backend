@@ -12,7 +12,7 @@ import (
 	manu_auth "github.com/Zeta-Manu/manu-auth/pkg/middleware"
 )
 
-func InitPredictRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator translator.Translator, cfg config.AppConfig) {
+func InitPredictRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator translator.TranslateAdapter, cfg config.AppConfig) {
 	predictController := controllers.NewPredictController(dbAdapter, s3Adapter, sagemakerAdapter, translator)
 
 	user := router.Group("/api", manu_auth.AuthenticationMiddleware(cfg.JWT.JWTPublicKey))

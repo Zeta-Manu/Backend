@@ -9,10 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/translate"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
@@ -56,15 +53,10 @@ func main() {
 		log.Fatalf("Failed to connect to Sagemaker: %v", err)
 	}
 
-	// FIX: Make this an adapter
-	awsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(appConfig.S3.Region),
-	})
+	translateAdapter, err := translator.NewTranslateAdapter(creds)
 	if err != nil {
-		log.Fatalf("Failed to create AWS session: %v", err)
+		log.Fatalf("Failed to connect to AWS Translate: %v", err)
 	}
-	transAdapter := translate.New(awsSession)
-	trans := translator.NewTranslator(transAdapter)
 
 	// Create a Gin router
 	r := gin.Default()
@@ -77,8 +69,8 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	// Initialize routes
-	routes.InitRoutes(r, db, *s3Adapter, transAdapter)
-	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *trans, *appConfig)
+	routes.InitTranslateRoutes(r, *translateAdapter)
+	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *translateAdapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

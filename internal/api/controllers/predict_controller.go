@@ -23,10 +23,10 @@ type PredictController struct {
 	sageMakerAdapter sagemaker.SageMakerAdapter
 	dbAdapter        database.DBAdapter
 	s3Adapter        s3.S3Adapter
-	translator       translator.Translator
+	translator       translator.TranslateAdapter
 }
 
-func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator translator.Translator) *PredictController {
+func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, sagemakerAdapter sagemaker.SageMakerAdapter, translator translator.TranslateAdapter) *PredictController {
 	return &PredictController{
 		dbAdapter:        dbAdapter,
 		s3Adapter:        s3Adapter,
@@ -99,7 +99,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	}
 
 	// Translate the processed data
-	translatedData, accuracy, err := c.translateData(processedData, "TH")
+	translatedData, err := c.translateData(processedData, "TH")
 	if err != nil {
 		fmt.Printf("Error translating data: %v\n", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error translating data"})
@@ -107,7 +107,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	}
 
 	// Return the translated data to the client
-	ctx.JSON(http.StatusOK, gin.H{"result": translatedData, "accuracy": accuracy})
+	ctx.JSON(http.StatusOK, gin.H{"result": translatedData})
 }
 
 func (c *PredictController) uploadVideoToS3(file *multipart.FileHeader) (string, error) {
@@ -224,14 +224,13 @@ func (c *PredictController) processMLResult(infer []byte) (string, error) {
 	return string(predictionsJSON), nil
 }
 
-func (c *PredictController) translateData(data string, targetLanguage string) (string, float32, error) {
-	// Call the TranslateText function from the Translator struct
-	translatedText, accuracy, err := c.translator.TranslateText(data, targetLanguage)
-
+func (c *PredictController) translateData(data string, targetLanguage string) (*string, error) {
+	const SOURCELANGUAGE = "en"
+	translatedText, err := c.translator.TranslateText(data, SOURCELANGUAGE, targetLanguage)
 	// Check for errors
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 
-	return translatedText, accuracy, nil
+	return translatedText.TranslateText, nil
 }
