@@ -18,7 +18,6 @@ import (
 	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
-	"github.com/Zeta-Manu/Backend/internal/adapters/sagemaker"
 	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
@@ -47,12 +46,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to S3: %v", err)
 	}
-
-	sagemakerAdapter, err := sagemaker.NewSageMakerAdapter(appConfig.S3.Region)
-	if err != nil {
-		log.Fatalf("Failed to connect to Sagemaker: %v", err)
-	}
-
 	translateAdapter, err := translator.NewTranslateAdapter(creds)
 	if err != nil {
 		log.Fatalf("Failed to connect to AWS Translate: %v", err)
@@ -70,7 +63,7 @@ func main() {
 
 	// Initialize routes
 	routes.InitTranslateRoutes(r, *translateAdapter)
-	routes.InitPredictRoutes(r, db, *s3Adapter, *sagemakerAdapter, *translateAdapter, *appConfig)
+	routes.InitPredictRoutes(r, db, *s3Adapter, *translateAdapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
