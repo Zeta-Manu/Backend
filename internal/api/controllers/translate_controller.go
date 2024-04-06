@@ -26,7 +26,7 @@ func NewTranslateController(translateAdapter *translator.TranslateAdapter) *Tran
 // @Accept json
 // @Produce json
 // @Param body body entity.TranslateJson true "Translation request"
-// @Success 200 {object} entity.ResponseWrapper{data=valueObjects.TranslateControllerOutput} "Successful operation"
+// @Success 200 {object} entity.ResponseWrapper{data=valueobjects.TranslateControllerOutput} "Successful operation"
 // @Failure 400 {object} entity.ErrorWrapper "Bad request"
 // @Failure 500 {object} entity.ErrorWrapper "Internal server error"
 // @Router /translate [post]

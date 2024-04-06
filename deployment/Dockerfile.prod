@@ -8,7 +8,8 @@ COPY go.mod .
 COPY go.sum .
 
 # Download dependencies
-RUN go mod download
+COPY vendor ./vendor
+RUN go mod vendor
 
 # Copy the entire project into the container
 COPY . .

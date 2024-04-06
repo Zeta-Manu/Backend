@@ -54,7 +54,6 @@ github.com/aws/aws-sdk-go/private/protocol/restxml
 github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/service/cognitoidentityprovider
 github.com/aws/aws-sdk-go/service/s3
-github.com/aws/aws-sdk-go/service/sagemakerruntime
 github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/ssooidc
@@ -106,6 +105,9 @@ github.com/gin-contrib/cors
 # github.com/gin-contrib/sse v0.1.0
 ## explicit; go 1.12
 github.com/gin-contrib/sse
+# github.com/gin-contrib/zap v0.2.0
+## explicit; go 1.18
+github.com/gin-contrib/zap
 # github.com/gin-gonic/gin v1.9.1
 ## explicit; go 1.20
 github.com/gin-gonic/gin

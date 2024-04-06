@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
@@ -20,16 +20,18 @@ import (
 
 // NOTE: Mp4 -> S3, S3_TABLE -> ML API
 type PredictController struct {
+	logger           *zap.Logger
 	dbAdapter        database.DBAdapter
 	s3Adapter        s3.S3Adapter
 	translateAdapter translator.TranslateAdapter
 }
 
-func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateAdapter translator.TranslateAdapter) *PredictController {
+func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateAdapter translator.TranslateAdapter, logger *zap.Logger) *PredictController {
 	return &PredictController{
 		dbAdapter:        dbAdapter,
 		s3Adapter:        s3Adapter,
 		translateAdapter: translateAdapter,
+		logger:           logger,
 	}
 }
 
@@ -53,6 +55,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Get the uploaded video file from the request
 	file, err := ctx.FormFile("video")
 	if err != nil {
+		c.logger.Error("video form file failed", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "No video file provided"})
 		return
 	}
@@ -61,17 +64,22 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 
 	s3Link, err := c.uploadVideoToS3(&appConfig.S3.BucketName, &appConfig.S3.Region, file)
 	if err != nil {
-		fmt.Printf("Error uploading video to S3: %v\n", err)
+		c.logger.Error("Error uploading video to S3: ", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
+		return
 	}
 
-	// Debug: Log the S3 link of the uploaded video
-	fmt.Printf("S3 link of uploaded video: %s\n", s3Link)
+	sub, exists := ctx.Get("sub")
+	if !exists {
+		c.logger.Error("Cannot get subject", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Subject not found"})
+		return
+	}
 
 	// Insert a record into the database
-	err = c.insertToS3Table(file.Filename, s3Link)
+	err = c.insertToS3Table(sub.(string), s3Link)
 	if err != nil {
-		fmt.Printf("Error inserting record into database: %v\n", err)
+		c.logger.Error("Error inserting record into database: ", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting record into database"})
 		return
 	}
@@ -79,7 +87,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Send the video to the ML API
 	infer, err := c.sendToML(appConfig.MLInference.ENDPOINT, s3Link)
 	if err != nil {
-		fmt.Printf("Error sending video to ML API: %v\n", err)
+		c.logger.Error("Error sending video to ML API: ", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while sending video to ML API"})
 		return
 	}
@@ -87,7 +95,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	// Process the returned data from SageMaker
 	avg, err := c.processMLResult(infer)
 	if err != nil {
-		fmt.Printf("Error processing ML result: %v\n", err)
+		c.logger.Error("Error processing ML result: ", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error processing ML result"})
 		return
 	}
@@ -99,7 +107,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		// Translate the processed data
 		translatedData, err := c.translateData(class, "TH")
 		if err != nil {
-			fmt.Printf("Error translating data: %v\n", err)
+			c.logger.Error("Error translating data: ", zap.Error(err))
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error translating data"})
 			return
 		}
@@ -115,6 +123,8 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 			Count:      count,
 		}
 	}
+
+	c.logger.Info("Translate")
 
 	// Return the translated data to the client
 	ctx.JSON(http.StatusOK, gin.H{"result": responses})
@@ -142,7 +152,6 @@ func (c *PredictController) uploadVideoToS3(bucketName *string, region *string, 
 	// Construct the S3 URL
 	s3Link := "https://" + *bucketName + ".s3." + *region + ".amazonaws.com/" + file.Filename
 	// Debug: Log the constructed S3 URL
-	fmt.Printf("Constructed S3 URL: %s\n", s3Link)
 	return s3Link, nil
 }
 
@@ -153,8 +162,10 @@ func (c *PredictController) insertToS3Table(sub string, s3Link string) error {
 	// Execute the query with the filename and status
 	_, err := c.dbAdapter.Exec(query, sub, s3Link, s3Link)
 	if err != nil {
+		c.logger.Error("Failed to insert to db", zap.Error(err))
 		return err
 	}
+	c.logger.Info("Insert to the table by sub", zap.String("sub", sub))
 
 	return nil
 }
@@ -163,14 +174,14 @@ func (c *PredictController) sendToML(endpoint string, s3Link string) ([]byte, er
 	url := endpoint + fmt.Sprintf("/predict?s3_uri=%s", s3Link)
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("Error making the GET request: %v\n", err)
+		c.logger.Error("Error making the GET request", zap.Error(err))
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Error reading the response body: %v\n", err)
+		c.logger.Error("Cannot read response body from ML", zap.Error(err))
 		return nil, err
 	}
 
@@ -181,7 +192,8 @@ func (c *PredictController) processMLResult(infer []byte) ([]entity.ProcessedAvg
 	var response valueobjects.MlResponse
 	err := json.Unmarshal(infer, &response)
 	if err != nil {
-		log.Fatalf("Error Unmarshalling JSON: %v", err)
+		c.logger.Error("Failed Unmarshal MlResponse", zap.Error(err))
+		return nil, err
 	}
 
 	processedAvgs := make([]entity.ProcessedAvg, 0, len(response.Results.Avg))
@@ -201,6 +213,7 @@ func (c *PredictController) translateData(data string, targetLanguage string) (*
 	translatedText, err := c.translateAdapter.TranslateText(data, SOURCELANGUAGE, targetLanguage)
 	// Check for errors
 	if err != nil {
+		c.logger.Error("Cannot translate text input", zap.Error(err))
 		return nil, err
 	}
 

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
@@ -11,8 +12,8 @@ import (
 	manu_auth "github.com/Zeta-Manu/manu-auth/pkg/middleware"
 )
 
-func InitPredictRoutes(router *gin.Engine, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translator translator.TranslateAdapter, cfg config.AppConfig) {
-	predictController := controllers.NewPredictController(dbAdapter, s3Adapter, translator)
+func InitPredictRoutes(router *gin.Engine, logger *zap.Logger, dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translator translator.TranslateAdapter, cfg config.AppConfig) {
+	predictController := controllers.NewPredictController(dbAdapter, s3Adapter, translator, logger)
 
 	user := router.Group("/api", manu_auth.AuthenticationMiddleware(cfg.JWT.JWTPublicKey))
 	{

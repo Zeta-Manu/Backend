@@ -11,9 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 
 	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
@@ -54,16 +56,20 @@ func main() {
 	// Create a Gin router
 	r := gin.Default()
 
+	logger, _ := zap.NewProduction()
+	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+	r.Use(ginzap.RecoveryWithZap(logger, true))
+
 	// CROS-Middleware
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowMethods = []string{"GET", "POST"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(corsConfig))
 
 	// Initialize routes
 	routes.InitTranslateRoutes(r, *translateAdapter)
-	routes.InitPredictRoutes(r, db, *s3Adapter, *translateAdapter, *appConfig)
+	routes.InitPredictRoutes(r, logger, db, *s3Adapter, *translateAdapter, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
@@ -77,21 +83,22 @@ func main() {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
+	logger.Info("Starting Server ...")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+	logger.Info("Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		logger.Fatal("Server Shutdown:", zap.Error(err))
 	}
 
 	select {
 	case <-ctx.Done():
-		log.Println("timeout of 5 seconds.")
+		logger.Info("timeout of 5 seconds.")
 	}
-	log.Println("Server exiting")
+	logger.Info("Server exiting")
 }
