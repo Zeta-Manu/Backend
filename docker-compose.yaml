@@ -5,18 +5,14 @@ services:
     build:
       context: .
       dockerfile: deployment/Dockerfile.dev
-      args:
-        DB_HOST: ${DB_HOST}
-        DB_PORT: ${DB_PORT}
-        DB_USER: ${DB_USER}
-        DB_PASSWORD: ${DB_PASSWORD}
-        DB_NAME: ${DB_NAME}
     env_file:
       - .env
     container_name: zeta-api-container
     working_dir: /app
     ports:
      - "8080:8080"
+    volumes:
+      - ./:/app
     depends_on:
       db:
         condition: service_healthy

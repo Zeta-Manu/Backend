@@ -9,19 +9,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/translate"
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 
-	docs "github.com/Zeta-Manu/Backend/docs"
+	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
-	"github.com/Zeta-Manu/Backend/internal/adapters/identityprovider"
+	httpadapter "github.com/Zeta-Manu/Backend/internal/adapters/http"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
+	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
 	"github.com/Zeta-Manu/Backend/internal/config"
 )
@@ -45,39 +45,38 @@ func main() {
 	}
 	defer db.Close()
 
-	s3Adapter, err := s3.NewS3Adapter(appConfig.S3.BucketName, appConfig.S3.Region, creds)
+	s3Adapter, err := s3.NewS3Adapter(appConfig.S3.Region, appConfig.S3.BucketName, creds)
 	if err != nil {
 		log.Fatalf("Failed to connect to S3: %v", err)
 	}
 
-	awsSession, err := session.NewSession(&aws.Config{
-		Region: aws.String(appConfig.S3.Region),
-	})
+	translateAdapter, err := translator.NewTranslateAdapter(appConfig.S3.Region, creds)
 	if err != nil {
-		log.Fatalf("Failed to create AWS session: %v", err)
+		log.Fatalf("Failed to connect to AWS Translate: %v", err)
 	}
-	Trans := translate.New(awsSession)
 
-	idpAdapter, err := identityprovider.NewCognitoAdapter(appConfig.Cognito.Region, appConfig.Cognito.UserPoolID, appConfig.Cognito.ClientID)
+	mlService, err := httpadapter.NewMLService(appConfig.MLInference.ENDPOINT)
 	if err != nil {
-		log.Fatalf("Failed to connect to Cognito: %v", err)
+		log.Fatalf("Failed to connect to ML inference: %v", err)
 	}
 
 	// Create a Gin router
 	r := gin.Default()
 
+	logger, _ := zap.NewProduction()
+	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+	r.Use(ginzap.RecoveryWithZap(logger, true))
+
 	// CROS-Middleware
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowMethods = []string{"GET", "POST"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(corsConfig))
 
-	docs.SwaggerInfo.BasePath = "/api"
-
 	// Initialize routes
-	routes.InitRoutes(r, db, *s3Adapter, Trans)
-	routes.InitUserRoutes(r, *appConfig, idpAdapter)
+	routes.InitTranslateRoutes(r, *translateAdapter)
+	routes.InitPredictRoutes(r, logger, db, *s3Adapter, *translateAdapter, mlService, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
@@ -91,21 +90,22 @@ func main() {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
+	logger.Info("Starting Server ...")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+	logger.Info("Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		logger.Fatal("Server Shutdown:", zap.Error(err))
 	}
 
 	select {
 	case <-ctx.Done():
-		log.Println("timeout of 5 seconds.")
+		logger.Info("timeout of 5 seconds.")
 	}
-	log.Println("Server exiting")
+	logger.Info("Server exiting")
 }

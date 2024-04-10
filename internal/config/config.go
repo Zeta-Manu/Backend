@@ -32,13 +32,23 @@ type JWTConfig struct {
 	JWTPublicKey string
 }
 
+type SageMakerConfig struct {
+	ENDPOINT string
+	Region   string
+}
+
+type MLInferenceConfig struct {
+	ENDPOINT string
+}
+
 // The application configuration
 type AppConfig struct {
-	Database DatabaseConfig
-	IAM      IAMConfig
-	S3       S3Config
-	Cognito  CognitoConfig
-	JWT      JWTConfig
+	Database    DatabaseConfig
+	IAM         IAMConfig
+	S3          S3Config
+	Cognito     CognitoConfig
+	JWT         JWTConfig
+	MLInference MLInferenceConfig
 }
 
 // initializes and returns the application configuration
@@ -71,11 +81,16 @@ func NewAppConfig() *AppConfig {
 		JWTPublicKey: os.Getenv("JWT_PUBLIC_KEY"),
 	}
 
+	mlInferenceConfig := MLInferenceConfig{
+		ENDPOINT: os.Getenv("ML_INFERENCE_ENDPOINT"),
+	}
+
 	return &AppConfig{
-		Database: dbConfig,
-		IAM:      iamConfig,
-		S3:       s3Config,
-		Cognito:  cognitoConfig,
-		JWT:      jwtConfig,
+		Database:    dbConfig,
+		IAM:         iamConfig,
+		S3:          s3Config,
+		Cognito:     cognitoConfig,
+		JWT:         jwtConfig,
+		MLInference: mlInferenceConfig,
 	}
 }

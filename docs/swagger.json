@@ -9,20 +9,39 @@
     "host": "localhost:8080",
     "basePath": "/api",
     "paths": {
-        "/postVideo": {
+        "/predict": {
             "post": {
-                "description": "Uploads a video file and processes it",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Uploads a video file to S3 and prepares it for machine learning prediction",
                 "consumes": [
                     "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Upload a video",
+                "tags": [
+                    "api"
+                ],
+                "summary": "Upload a video for prediction",
                 "parameters": [
                     {
+                        "type": "string",
+                        "default": "Bearer \u003cAdd access token here\u003e",
+                        "description": "Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "type": "file",
-                        "description": "Vidoe File",
+                        "description": "Video file to upload",
                         "name": "video",
                         "in": "formData",
                         "required": true
@@ -30,285 +49,46 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "File uploaded successfully",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
             }
         },
-        "/uploadtoS3": {
+        "/translate": {
             "post": {
-                "description": "Uploads a file to S3 bucket",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json",
-                    "application/json"
-                ],
-                "summary": "Save video to S3",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File to upload",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "File uploaded successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/change-password": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Change the password for the authenticated user",
+                "description": "Translates the provided text into the target language",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Change user password",
+                "summary": "Translate text",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Bearer {token}",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "User change password info",
+                        "description": "Translation request",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.UserChangePassword"
+                            "$ref": "#/definitions/entity.TranslateJson"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/confirm": {
-            "post": {
-                "description": "Confirm a user's registration using the provided confirmation information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Confirm user registration",
-                "parameters": [
-                    {
-                        "description": "User registration confirmation info",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserRegistrationConfirm"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "408": {
-                        "description": "Request Timeout"
-                    }
-                }
-            }
-        },
-        "/user/confirm-forgot-password": {
-            "post": {
-                "description": "Initiate the password reset process for a user by sending a reset link to their email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Forgot Password",
-                "parameters": [
-                    {
-                        "description": "Email address of the user",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserResetPassword"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResponseWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/forgot-password": {
-            "post": {
-                "description": "Initiate the password reset process for a user by sending a reset link to their email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Forogot Password",
-                "parameters": [
-                    {
-                        "description": "Email address of the user",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.Email"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResponseWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/login": {
-            "post": {
-                "description": "Authenticate user with email and password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Log in with email and password",
-                "parameters": [
-                    {
-                        "description": "User login info",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserLogin"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                        "description": "Successful operation",
                         "schema": {
                             "allOf": [
                                 {
@@ -318,7 +98,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/entity.LoginResult"
+                                            "$ref": "#/definitions/valueobjects.TranslateControllerOutput"
                                         }
                                     }
                                 }
@@ -326,99 +106,13 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Bad request",
                         "schema": {
                             "$ref": "#/definitions/entity.ErrorWrapper"
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/resend-confirm": {
-            "post": {
-                "description": "Resend the confirmation code to the provided email address",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Resend confirmation code",
-                "parameters": [
-                    {
-                        "description": "Email address to resend the confirmation code to",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.Email"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResponseWrapper"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/signup": {
-            "post": {
-                "description": "Register a new user with email and password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Sign up a new user",
-                "parameters": [
-                    {
-                        "description": "User registration info",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserRegistration"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ResponseWrapper"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/entity.ErrorWrapper"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
                             "$ref": "#/definitions/entity.ErrorWrapper"
                         }
@@ -428,38 +122,10 @@
         }
     },
     "definitions": {
-        "entity.Email": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.ErrorWrapper": {
             "type": "object",
             "properties": {
                 "error": {}
-            }
-        },
-        "entity.LoginResult": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "id_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "token_type": {
-                    "type": "string"
-                }
             }
         },
         "entity.ResponseWrapper": {
@@ -468,63 +134,24 @@
                 "data": {}
             }
         },
-        "entity.UserChangePassword": {
+        "entity.TranslateJson": {
             "type": "object",
             "properties": {
-                "previous_password": {
+                "targetLanguage": {
                     "type": "string"
                 },
-                "proposed_password": {
+                "text": {
                     "type": "string"
                 }
             }
         },
-        "entity.UserLogin": {
+        "valueobjects.TranslateControllerOutput": {
             "type": "object",
             "properties": {
-                "email": {
+                "originalText": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserRegistration": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserRegistrationConfirm": {
-            "type": "object",
-            "properties": {
-                "confirmation_code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserResetPassword": {
-            "type": "object",
-            "properties": {
-                "confirmation_code": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "new_password": {
+                "translatedText": {
                     "type": "string"
                 }
             }

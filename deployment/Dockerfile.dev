@@ -1,5 +1,5 @@
 # Use a development-specific base image with Go and Air
-FROM golang:1.21-alpine as development
+FROM golang:1.22-alpine as development
 
 # Set environment variables for AWS SDK
 ENV AWS_SDK_LOAD_CONFIG=true
@@ -13,6 +13,8 @@ ARG S3_BUCKET
 ARG REGION
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
+ARG JWT_PUBLIC_KEY
+ARG ENDPOINT
 
 WORKDIR /app
 
@@ -24,7 +26,8 @@ COPY go.mod .
 COPY go.sum .
 
 # Download dependencies
-RUN go mod download
+COPY vendor ./vendor
+RUN go mod vendor
 
 # Copy the entire project into the container
 COPY . .
