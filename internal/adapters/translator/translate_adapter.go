@@ -13,8 +13,9 @@ type TranslateAdapter struct {
 	Client *translate.Translate
 }
 
-func NewTranslateAdapter(creds *credentials.Credentials) (*TranslateAdapter, error) {
+func NewTranslateAdapter(region string, creds *credentials.Credentials) (*TranslateAdapter, error) {
 	sess, err := session.NewSession(&aws.Config{
+		Region:      aws.String(region),
 		Credentials: creds,
 	})
 	if err != nil {
