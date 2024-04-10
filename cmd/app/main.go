@@ -19,6 +19,7 @@ import (
 
 	_ "github.com/Zeta-Manu/Backend/docs"
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
+	httpadapter "github.com/Zeta-Manu/Backend/internal/adapters/http"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
 	"github.com/Zeta-Manu/Backend/internal/api/routes"
@@ -29,7 +30,7 @@ import (
 // @version 1.0
 // @description server
 
-// @host localhost:8081
+// @host localhost:8080
 // @BasePath /api
 
 func main() {
@@ -48,9 +49,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to S3: %v", err)
 	}
-	translateAdapter, err := translator.NewTranslateAdapter(creds)
+
+	translateAdapter, err := translator.NewTranslateAdapter(appConfig.S3.Region, creds)
 	if err != nil {
 		log.Fatalf("Failed to connect to AWS Translate: %v", err)
+	}
+
+	mlService, err := httpadapter.NewMLService(appConfig.MLInference.ENDPOINT)
+	if err != nil {
+		log.Fatalf("Failed to connect to ML inference: %v", err)
 	}
 
 	// Create a Gin router
@@ -69,7 +76,7 @@ func main() {
 
 	// Initialize routes
 	routes.InitTranslateRoutes(r, *translateAdapter)
-	routes.InitPredictRoutes(r, logger, db, *s3Adapter, *translateAdapter, *appConfig)
+	routes.InitPredictRoutes(r, logger, db, *s3Adapter, *translateAdapter, mlService, *appConfig)
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 

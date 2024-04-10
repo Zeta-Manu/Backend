@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8081",
+    "host": "localhost:8080",
     "basePath": "/api",
     "paths": {
         "/predict": {
@@ -33,6 +33,7 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "default": "Bearer \u003cAdd access token here\u003e",
                         "description": "Bearer {token}",
                         "name": "Authorization",
                         "in": "header",

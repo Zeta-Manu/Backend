@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -11,9 +10,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Zeta-Manu/Backend/internal/adapters/database"
+	httpadapter "github.com/Zeta-Manu/Backend/internal/adapters/http"
 	"github.com/Zeta-Manu/Backend/internal/adapters/s3"
 	"github.com/Zeta-Manu/Backend/internal/adapters/translator"
-	"github.com/Zeta-Manu/Backend/internal/config"
 	"github.com/Zeta-Manu/Backend/internal/domain/entity"
 	valueobjects "github.com/Zeta-Manu/Backend/internal/domain/valueObjects"
 )
@@ -24,14 +23,16 @@ type PredictController struct {
 	dbAdapter        database.DBAdapter
 	s3Adapter        s3.S3Adapter
 	translateAdapter translator.TranslateAdapter
+	mlService        httpadapter.MLService
 }
 
-func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateAdapter translator.TranslateAdapter, logger *zap.Logger) *PredictController {
+func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, translateAdapter translator.TranslateAdapter, mlService httpadapter.MLService, logger *zap.Logger) *PredictController {
 	return &PredictController{
 		dbAdapter:        dbAdapter,
 		s3Adapter:        s3Adapter,
 		translateAdapter: translateAdapter,
 		logger:           logger,
+		mlService:        mlService,
 	}
 }
 
@@ -45,7 +46,7 @@ func NewPredictController(dbAdapter database.DBAdapter, s3Adapter s3.S3Adapter, 
 // @SecurityDefinition.Type apiKey
 // @Accept  multipart/form-data
 // @Produce  json
-// @Param Authorization header string true "Bearer {token}"
+// @Param Authorization header string true "Bearer {token}" default(Bearer <Add access token here>)
 // @Param   video formData file true "Video file to upload"
 // @Success  200 {object} map[string]interface{}
 // @Failure  400 {object} map[string]interface{}
@@ -60,9 +61,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		return
 	}
 
-	appConfig := config.NewAppConfig()
-
-	s3Link, err := c.uploadVideoToS3(&appConfig.S3.BucketName, &appConfig.S3.Region, file)
+	s3Link, err := c.uploadVideoToS3(&c.s3Adapter.Bucket, file)
 	if err != nil {
 		c.logger.Error("Error uploading video to S3: ", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error while processing the video"})
@@ -85,7 +84,7 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 	}
 
 	// Send the video to the ML API
-	infer, err := c.sendToML(appConfig.MLInference.ENDPOINT, s3Link)
+	infer, err := c.sendToML(s3Link)
 	if err != nil {
 		c.logger.Error("Error sending video to ML API: ", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error while sending video to ML API"})
@@ -124,13 +123,10 @@ func (c *PredictController) Predict(ctx *gin.Context) {
 		}
 	}
 
-	c.logger.Info("Translate")
-
-	// Return the translated data to the client
 	ctx.JSON(http.StatusOK, gin.H{"result": responses})
 }
 
-func (c *PredictController) uploadVideoToS3(bucketName *string, region *string, file *multipart.FileHeader) (string, error) {
+func (c *PredictController) uploadVideoToS3(bucketName *string, file *multipart.FileHeader) (string, error) {
 	// Open the file
 	uploadedFile, err := file.Open()
 	if err != nil {
@@ -150,7 +146,7 @@ func (c *PredictController) uploadVideoToS3(bucketName *string, region *string, 
 		return "", err
 	}
 	// Construct the S3 URL
-	s3Link := "https://" + *bucketName + ".s3." + *region + ".amazonaws.com/" + file.Filename
+	s3Link := "s3://" + *bucketName + "/" + file.Filename
 	// Debug: Log the constructed S3 URL
 	return s3Link, nil
 }
@@ -170,22 +166,14 @@ func (c *PredictController) insertToS3Table(sub string, s3Link string) error {
 	return nil
 }
 
-func (c *PredictController) sendToML(endpoint string, s3Link string) ([]byte, error) {
-	url := endpoint + fmt.Sprintf("/predict?s3_uri=%s", s3Link)
-	resp, err := http.Get(url)
+func (c *PredictController) sendToML(s3Link string) ([]byte, error) {
+	// Directly call the Predict method without using a goroutine
+	result, err := c.mlService.Predict(s3Link)
 	if err != nil {
-		c.logger.Error("Error making the GET request", zap.Error(err))
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		c.logger.Error("Cannot read response body from ML", zap.Error(err))
 		return nil, err
 	}
 
-	return body, nil
+	return result, nil
 }
 
 func (c *PredictController) processMLResult(infer []byte) ([]entity.ProcessedAvg, error) {

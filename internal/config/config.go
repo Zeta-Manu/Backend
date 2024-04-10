@@ -82,7 +82,7 @@ func NewAppConfig() *AppConfig {
 	}
 
 	mlInferenceConfig := MLInferenceConfig{
-		ENDPOINT: os.Getenv("ENDPOINT"),
+		ENDPOINT: os.Getenv("ML_INFERENCE_ENDPOINT"),
 	}
 
 	return &AppConfig{

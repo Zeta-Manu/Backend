@@ -22,7 +22,7 @@ definitions:
       translatedText:
         type: string
     type: object
-host: localhost:8081
+host: localhost:8080
 info:
   contact: {}
   description: server
@@ -36,7 +36,8 @@ paths:
       description: Uploads a video file to S3 and prepares it for machine learning
         prediction
       parameters:
-      - description: Bearer {token}
+      - default: Bearer <Add access token here>
+        description: Bearer {token}
         in: header
         name: Authorization
         required: true
