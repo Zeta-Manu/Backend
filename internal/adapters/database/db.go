@@ -48,27 +48,3 @@ func (db *Database) Close() error {
 	}
 	return nil
 }
-
-/*func (db *Database) InitMigrate() error {
-	db, err := sql.Open("mysql", "user:password@tcp(host:port)/dbname?multiStatements=true")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		"file:///migrations",
-		"mysql", driver)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := m.Up(); err != nil {
-		log.Fatal(err)
-	}
-}*/
