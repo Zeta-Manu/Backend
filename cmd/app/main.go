@@ -75,6 +75,9 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	// Initialize routes
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "healthy"})
+	})
 	routes.InitTranslateRoutes(r, *translateAdapter)
 	routes.InitPredictRoutes(r, logger, db, *s3Adapter, *translateAdapter, mlService, *appConfig)
 
